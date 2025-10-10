@@ -1,0 +1,8 @@
+---
+- name: Install K3S cluster
+  hosts: cluster
+  become: true
+  gather_facts: false
+
+  roles:
+    - k3s_install

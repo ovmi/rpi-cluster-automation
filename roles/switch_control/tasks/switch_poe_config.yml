@@ -1,0 +1,9 @@
+- name: Set PoE power for ports
+  ansible.builtin.shell: |
+    {{ ntgrrc_bin }} poe set \
+      -p {{ item.port }} \
+      --power {{ item.power }} \
+      --address {{ ansible_host }}
+  loop: "{{ switch_config.ports }}"
+  when: item.power is defined
+  changed_when: true

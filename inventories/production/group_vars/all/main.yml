@@ -1,0 +1,5 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+
+helm_namespace: monitoring                    # default namespace for Helm and Kubernetes operations
+helm_release: monitor-stack                   # default Helm release name for Prometheus and Grafana

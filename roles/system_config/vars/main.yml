@@ -1,0 +1,8 @@
+node_entries: >-
+  {{
+    groups['cluster']
+    | reject('equalto', 'localhost')
+    | map('extract', hostvars, 'ansible_host')
+    | zip(groups['cluster'] | reject('equalto', 'localhost'))
+    | list
+  }}

@@ -1,0 +1,12 @@
+---
+- name: Switch port control
+  hosts: switch
+  gather_facts: false
+
+  vars:
+    ntgrrc_bin: "{{ playbook_dir }}/../roles/switch_control/files/ntgrrc"
+    poe_action: null          # Options: enable, disable, toggle
+    configure_switch: false   # Set port names, speed, PoE policies, etc.
+
+  roles:
+    - switch_control

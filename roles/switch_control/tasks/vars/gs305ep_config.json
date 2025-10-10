@@ -1,0 +1,50 @@
+{
+    "address": "192.168.100.10",
+    "password": "ovaMentorG@77",
+    "ports": [
+      {
+        "port": 1,
+        "ip": "192.168.100.10",
+        "mac": "2C:CF:67:68:C2:B1",
+        "name": "rpi-node0",
+        "speed": "Auto",
+        "flow_control": "On",
+        "mode": "legacy",
+
+        "power": "enable"
+      },
+      {
+        "port": 2,
+        "ip": "192.168.100.11",
+        "mac": "2C:CF:67:13:92:A9 ",
+        "name": "rpi-node1",
+        "speed": "Auto",
+        "flow_control": "On",
+        "mode": "legacy",
+
+        "power": "enable"
+      },
+      {
+        "port": 3,
+        "ip": "192.168.100.12",
+        "mac": "D8:3A:DD:46:F8:30",
+        "name": "rpi-node2",
+        "speed": "Auto",
+        "flow_control": "On",
+        "mode": "legacy",
+
+        "power": "enable"
+      },
+      {
+        "port": 4,
+        "ip": "192.168.100.13",
+        "mac": "D8:3A:DD:4F:67:A9",
+        "name": "rpi-node3",
+        "speed": "Auto",
+        "flow_control": "On",
+        "mode": "legacy",
+
+        "power": "enable"
+      }
+    ]
+  }

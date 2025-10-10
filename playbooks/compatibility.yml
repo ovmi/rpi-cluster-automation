@@ -1,0 +1,7 @@
+---
+- name: Check for Ansible version and Python environment
+  hosts: localhost
+  gather_facts: true
+
+  roles:
+    - compatibility

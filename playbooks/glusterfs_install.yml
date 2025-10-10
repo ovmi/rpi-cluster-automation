@@ -1,0 +1,19 @@
+---
+- name: Setup GlusterFS
+  hosts: cluster
+  become: true
+  gather_facts: true
+
+  vars:
+    gluster_brick_node: "rpi-node3"
+    gluster_volume_name: "{{ gluster_brick_node }}_volume"
+    allow_format: true
+
+  roles:
+    - glusterfs_install
+
+- name: Expose GlusterFS to Kubernetes
+  hosts: control
+  become: true
+  roles:
+    - k3s_glusterfs

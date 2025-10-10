@@ -1,0 +1,55 @@
+- name: Ensure sshpass is installed
+  ansible.builtin.package:
+    name: sshpass
+    state: present
+  become: true
+
+- name: Ensure ~/.ssh directory exists
+  file:
+    path: "~/.ssh"
+    state: directory
+    mode: '0700'
+  run_once: true
+
+- name: Check if private key exists
+  ansible.builtin.stat:
+    path: "{{ ssh_private_key_path }}"
+  register: ssh_key_stat
+  run_once: true
+
+- name: Generate SSH key pair if not present
+  ansible.builtin.openssh_keypair:
+    path: "{{ ssh_private_key_path }}"
+    type: "{{ ssh_key_type | default('ed25519') }}"
+    # size: "{{ ssh_key_bits }}" # only used if type is rsa
+    comment: "{{ ssh_key_comment | default('raspi-cluster') }}"
+  when: not ssh_key_stat.stat.exists
+  run_once: true
+
+- name: Clean up existing host keys
+  shell: "ssh-keygen -R {{ ansible_host | default(inventory_hostname) }} || true"
+  ignore_errors: true
+  changed_when: false
+
+- name: Scan and save host keys
+  shell: "ssh-keyscan -H {{ ansible_host | default(inventory_hostname) }} >> {{ ssh_known_hosts | expanduser }}"
+  ignore_errors: true
+  changed_when: false
+
+- name: Push public key with sshpass
+  ansible.builtin.shell: >
+    sshpass -p '{{ hostvars[item].ansible_pass | quote }}'
+    ssh-copy-id
+    -o PreferredAuthentications=keyboard-interactive,password
+    -o PubkeyAuthentication=no
+    -o StrictHostKeyChecking=no
+    -o UserKnownHostsFile=/dev/null
+    -i "{{ (ssh_public_key_path | default(ssh_public_key_path)) | expanduser }}"
+    "{{ hostvars[item].ansible_user | default(ansible_user) }}@{{ hostvars[item].ansible_host | default(item) }}"
+  args:
+    executable: /bin/bash
+  when:
+    - hostvars[item].ansible_pass is defined
+  loop: "{{ groups['cluster'] | default([]) }}"
+  notify: Restart SSH service
+  ignore_errors: true

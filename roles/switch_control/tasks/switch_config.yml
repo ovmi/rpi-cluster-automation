@@ -1,0 +1,16 @@
+- name: Ensure ntgrrc is executable
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/ntgrrc"
+    mode: '0755'
+
+- name: Load switch config from JSON
+  ansible.builtin.include_vars:
+    file: gs305ep_config.json
+    name: switch_config
+
+- name: Log in to switch and get token
+  ansible.builtin.shell: >
+    {{ ntgrrc_bin }} login
+    --address {{ ansible_host }}
+    --password {{ switch_config.password }}
+  changed_when: false

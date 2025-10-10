@@ -1,0 +1,4 @@
+- name: Deploy production pod using GlusterFS volume
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'gluster-deployment.yaml.j2') }}"

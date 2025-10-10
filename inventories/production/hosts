@@ -1,0 +1,22 @@
+[switch]
+gs305ep ansible_host=192.168.100.100 ansible_connection=local
+
+[local]
+localhost ansible_connection=local
+
+[control]
+rpi-node0 ansible_connection=ssh ansible_host=192.168.100.10 ansible_user=node0 ansible_pass=node0 ansible_become_pass=node0
+
+[workers]
+rpi-node1 ansible_connection=ssh ansible_host=192.168.100.11 ansible_user=node1 ansible_pass=node1 ansible_become_pass=node1
+rpi-node2 ansible_connection=ssh ansible_host=192.168.100.12 ansible_user=node2 ansible_pass=node2 ansible_become_pass=node2
+rpi-node3 ansible_connection=ssh ansible_host=192.168.100.13 ansible_user=node3 ansible_pass=node3 ansible_become_pass=node3
+#rpi-lte ansible_connection=ssh ansible_host=192.168.100.14 ansible_user=node-lte ansible_pass=node-le
+
+[cluster:children]
+control
+workers
+
+[all:vars]
+lte_gateway_ip=192.168.225.1
+wired_gateway_ip=192.168.100.1

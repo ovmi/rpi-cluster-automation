@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# This script collects the CPU temperature from a Raspberry Pi and writes it to a Prometheus textfile format.
+# If vcgencmd is not available, it falls back to reading the temperature from the thermal zone file.
+# The temperature is then written to a file in the specified directory in a format that Prometheus can scrape.
+# Usage: ./temperature_exporter.sh
+
+# Check if the required directory exists
+if [ ! -d "{{ node_exporter_collector }}" ]; then
+    echo "Directory {{ node_exporter_collector }} does not exist. Creating it."
+    mkdir -p {{ node_exporter_collector }}
+fi
+
+# Define the output file path
+output="{{ node_exporter_collector }}/temperature.prom"
+
+# Check if the vcgencmd command is available
+# If it is, use it to get the CPU temperature
+# If not, fall back to reading from the thermal zone file     
+if command -v vcgencmd &> /dev/null; then
+    temp_raw=$(vcgencmd measure_temp | grep -oP '(?<=temp=)[0-9.]+')
+else
+    temp_raw=$(cat /sys/class/thermal/thermal_zone0/temp)
+    temp_raw=$(echo "scale=1; $temp_raw / 1000" | bc)
+fi
+
+tmp_output=$(mktemp)
+{
+    echo "# HELP rpi_cpu_temperature_celsius CPU temperature in Celsius"
+    echo "# TYPE rpi_cpu_temperature_celsius gauge"
+    echo "rpi_cpu_temperature_celsius $temp_raw"
+} > "$tmp_output"
+
+mv "$tmp_output" "$output"
+chown node_exporter:node_exporter "$output"
+chmod 644 "$output"

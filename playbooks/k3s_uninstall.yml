@@ -1,0 +1,7 @@
+---
+- name: Uninstall K3s from all cluster nodes
+  hosts: cluster
+  become: true
+  gather_facts: false
+  roles:
+    - k3s_uninstall

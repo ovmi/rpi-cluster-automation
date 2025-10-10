@@ -1,0 +1,89 @@
+---
+- name: Stop K3s service on control node
+  ansible.builtin.systemd:
+    name: k3s
+    state: stopped
+    enabled: no
+  when: inventory_hostname in groups['control']
+  ignore_errors: yes
+
+- name: Stop K3s agent service on worker nodes
+  ansible.builtin.systemd:
+    name: k3s-agent
+    state: stopped
+    enabled: no
+  when: inventory_hostname in groups['workers']
+  ignore_errors: yes
+
+- name: Run the K3s uninstall script
+  ansible.builtin.command: /usr/local/bin/k3s-uninstall.sh
+  args:
+    removes: /usr/local/bin/k3s
+  ignore_errors: yes
+
+- name: Run the K3s agent uninstall script
+  ansible.builtin.command: /usr/local/bin/k3s-agent-uninstall.sh
+  args:
+    removes: /usr/local/bin/k3s-agent
+  ignore_errors: yes
+
+- name: Remove leftover K3s directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/rancher/k3s
+    - /var/lib/rancher/k3s
+    - /var/lib/kubelet
+    - /etc/systemd/system/k3s.service
+    - /etc/systemd/system/k3s-agent.service
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Remove K3s binary
+  ansible.builtin.file:
+    path: /usr/local/bin/k3s
+    state: absent
+
+- name: Remove K3s agent binary
+  ansible.builtin.file:
+    path: /usr/local/bin/k3s-agent
+    state: absent
+
+- name: Remove symlinks
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /usr/local/bin/kubectl
+    - /usr/local/bin/crictl
+    - /usr/local/bin/ctr
+    - /usr/local/bin/k3s-killall.sh
+    - /usr/local/bin/k3s-uninstall.sh
+    - /usr/local/bin/k3s-agent-uninstall.sh
+
+- name: Remove K3s network interfaces
+  ansible.builtin.command: ip link delete flannel.1
+  ignore_errors: yes
+
+- name: Remove iptables rules related to K3s
+  ansible.builtin.command: iptables -F
+  ignore_errors: yes
+
+- name: Ensure K3s is completely removed
+  ansible.builtin.command: which k3s
+  register: k3s_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Display K3s removal status
+  ansible.builtin.debug:
+    msg: "K3s has been completely removed!"
+  notify:
+    - reboot-node
+    - wait-for-node
+  changed_when: true
+  when: k3s_check.rc != 0
+

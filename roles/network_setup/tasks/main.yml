@@ -1,0 +1,116 @@
+---
+- name: Ensure iproute2 is installed
+  ansible.builtin.package:
+    name:
+      - minicom
+      - iptables
+      - iproute2
+      - net-tools
+    state: present
+  when: inventory_hostname == 'rpi-node3'
+
+# - name: Include modem config task
+#   include_tasks: modem_config.yml
+#   when: inventory_hostname == "rpi-node3"
+
+- name: Add custom routing tables
+  ansible.builtin.lineinfile:
+    path: /etc/iproute2/rt_tables
+    line: "{{ item }}"
+    state: present
+  with_items:
+    - "200 lte"
+    - "201 wired"
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Add policy routing rules if not present
+  ansible.builtin.shell: |
+    ip rule add from {{ ansible_default_ipv4.address }} table wired priority 100 2>/dev/null || true
+    ip rule add from {{ ansible_default_ipv4.address }} table lte priority 200 2>/dev/null || true
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Debug rpi-node3 ansible_default_ipv4 address
+  debug:
+    msg: "rpi-node3 default IP is {{ hostvars['rpi-node3'].ansible_default_ipv4.address }}"
+
+- name: Enable IP forwarding
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+  when: inventory_hostname == 'rpi-node3'
+
+# - name: Set rpi-node3 as default gateway for all cluster nodes
+#   ansible.builtin.shell: |
+#     ip route show | grep -q "default via {{ hostvars['rpi-node3'].ansible_eth0.ipv4.address }} dev eth0" || \
+#     ip route del default && \
+#     ip route add default via {{ hostvars['rpi-node3'].ansible_eth0.ipv4.address }} dev eth0
+#   when:
+#     - ansible_default_ipv4.address is defined
+#     - inventory_hostname != 'rpi-node3'
+
+- name: Ensure rpi-node3 is set as default gateway for all nodes
+  ansible.builtin.shell: |
+    current_gw=$(ip route | grep '^default' | awk '{print $3}')
+    if [ "$current_gw" != "{{ hostvars['rpi-node3'].ansible_eth0.ipv4.address }}" ]; then
+      ip route del default
+      ip route add default via {{ hostvars['rpi-node3'].ansible_eth0.ipv4.address }} dev eth0
+    fi
+  when:
+    - ansible_default_ipv4.address is defined
+    - inventory_hostname != 'rpi-node3'
+  ignore_errors: true
+
+- name: Configure NAT on rpi-node3 to forward traffic from eth0 to eth1 (LTE)
+  ansible.builtin.shell: |
+    iptables -t nat -C POSTROUTING -o eth1 -j MASQUERADE 2>/dev/null || \
+    iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Add routing entries for LTE and Wired interfaces
+  ansible.builtin.shell: |
+    ip route show table lte | grep -q "default via {{ lte_gateway_ip }}" || \
+    ip route add default via {{ lte_gateway_ip }} dev eth1 table lte
+
+    ip route show table wired | grep -q "default via {{ wired_gateway_ip }}" || \
+    ip route add default via {{ wired_gateway_ip }} dev eth0 table wired
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Configure IP rules for policy-based routing
+  ansible.builtin.shell: |
+    ip rule show | grep -q "from {{ ansible_default_ipv4.address }} lookup wired" || \
+    ip rule add from {{ ansible_default_ipv4.address }} lookup wired priority 100
+
+    ip rule show | grep -q "from {{ ansible_default_ipv4.address }} lookup lte" || \
+    ip rule add from {{ ansible_default_ipv4.address }} lookup lte priority 200
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Deploy route monitoring script
+  ansible.builtin.copy:
+    src: "switch_routes.sh"
+    dest: /usr/local/bin/switch_routes.sh
+    mode: '0755'
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Create systemd service for route switching
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/route-switch.service
+    content: |
+      [Unit]
+      Description=Route Switching Service
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/switch_routes.sh
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+  when: inventory_hostname == 'rpi-node3'
+
+- name: Enable and start route-switch service
+  ansible.builtin.systemd:
+    name: route-switch
+    enabled: yes
+    state: started
+  when: inventory_hostname == 'rpi-node3'

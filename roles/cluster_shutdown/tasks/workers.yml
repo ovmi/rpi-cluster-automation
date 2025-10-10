@@ -1,0 +1,8 @@
+---
+- name: Ensure all unsaved data is flushed to disk
+  ansible.builtin.shell: sync
+
+- name: Shutdown worker nodes
+  ansible.builtin.command: /sbin/shutdown -h now
+  ignore_errors: true
+  ignore_unreachable: true

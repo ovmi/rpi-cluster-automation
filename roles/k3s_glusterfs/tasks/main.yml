@@ -1,0 +1,21 @@
+---
+- name: Create StorageClass
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'gluster-sc.yaml.j2') }}"
+
+- name: Create PersistentVolume
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'gluster-pv.yaml.j2') }}"
+
+- name: Create PersistentVolumeClaim
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'gluster-pvc.yaml.j2') }}"
+
+- name: Run gluster pod test
+  include_tasks: gluster_pod_test.yml
+
+- name: Deploy production pod using GlusterFS
+  include_tasks: hostpath-deployment.yaml

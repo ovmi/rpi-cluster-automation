@@ -1,0 +1,22 @@
+- name: Template Helm values.yaml
+  ansible.builtin.template:
+    src: release-values.yaml.j2
+    dest: /tmp/release_values.yaml
+
+- name: Upgrade release via Helm with custom values file
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade {{ helm_release }} prometheus-community/kube-prometheus-stack
+      -n {{ helm_namespace }}
+      --install
+      -f /tmp/release_values.yaml
+  environment:
+    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+  become: false
+  register: helm_result
+  changed_when: "'Release \\\"{{ helm_release }}\\\" has been upgraded' in helm_result.stdout"
+  failed_when: helm_result.rc != 0
+
+# - name: Show Helm result
+#   debug:
+#     var: helm_result

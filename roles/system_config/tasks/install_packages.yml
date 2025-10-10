@@ -1,0 +1,87 @@
+- name: Install Debian archive keyring
+  apt:
+    name: debian-archive-keyring
+    state: present
+    update_cache: yes
+  when: ansible_distribution_release in ["bookworm", "bullseye"]
+
+- name: Update package cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Add backports repository
+  apt_repository:
+    repo: "deb http://deb.debian.org/debian {{ ansible_distribution_release }}-backports main"
+    state: present
+    filename: "{{ ansible_distribution_release }}-backports"
+  when: ansible_distribution_release in ["bookworm", "bullseye"]
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    upgrade: dist
+
+- name: Set hostname on all cluster nodes
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Debug current node system info
+  ansible.builtin.debug:
+    msg: >
+      Node {{ inventory_hostname }} (IP: {{ ansible_host | default(inventory_hostname) }}) is running
+      {{ ansible_distribution }} {{ ansible_distribution_version }} {{ ansible_distribution_release }}
+      with kernel version {{ ansible_kernel }} and architecture {{ ansible_architecture }}
+
+- name: Update /etc/hosts with hostnames defined in the inventory
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ item.0 }}\\s+"
+    line: "{{ item.0 }} {{ item.1 }}"
+    state: present
+  loop: "{{ node_entries }}"
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - vim
+    state: present
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Check if .vimrc exists
+  ansible.builtin.stat:
+    path: "/home/{{ ansible_user }}/.vimrc"
+  register: vimrc_stat
+
+- name: Copy .vimrc file to all nodes (control and workers) if it not already present
+  ansible.builtin.copy:
+    src: ".vimrc"
+    dest: "/home/{{ ansible_user }}/.vimrc"
+    mode: 0600
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when: not vimrc_stat.stat.exists
+
+- name: Install additional packages
+  ansible.builtin.apt:
+    name:
+      - net-tools
+    state: present
+
+- name: Verify installed packages
+  ansible.builtin.command: "which {{ item }}"
+  loop:
+    - vim
+    - netstat
+    - ifconfig
+  changed_when: false
+  ignore_errors: true
+  register: package_check
+
+- name: Remove dependencies that are no longer required.
+  ansible.builtin.apt:
+    autoremove: yes
+
+- name: Show installed packages
+  ansible.builtin.debug:
+    msg: "{{ item.stdout }}"
+  loop: "{{ package_check.results }}"

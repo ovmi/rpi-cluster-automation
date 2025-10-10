@@ -1,0 +1,17 @@
+---
+prometheus_service_name: prometheus
+prometheus_service_user: prometheus
+prometheus_service_group: prometheus
+prometheus_service_mode: '0644'
+prometheus_port: '9090'
+
+grafana_port: '80'
+
+kube_manifests_dir: "/home/k3sadmin/k3s-manifests"
+
+prometheus_hostname: prometheus.cluster.local # default hostname for Prometheus
+grafana_hostname: grafana.cluster.local       # default hostname for Grafana
+
+traefik_namespace: traefik                    # default namespace for Traefik
+helm_release_traefik: traefik                 # default Helm release name for Traefik
+traefik_hostname: traefik.cluster.local       # default hostname for Traefik

@@ -1,0 +1,16 @@
+---
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] {{ docker_repo_base }} {{ docker_repo_release }} stable"
+    state: present
+
+- name: Update and upgrade packages again
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name: docker-ce
+    state: present

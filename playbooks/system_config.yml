@@ -1,0 +1,7 @@
+---
+- name: System configuration
+  hosts: cluster
+  become: true
+  gather_facts: true
+  roles:
+    - system_config

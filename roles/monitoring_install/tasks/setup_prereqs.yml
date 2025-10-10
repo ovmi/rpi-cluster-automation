@@ -1,0 +1,16 @@
+- name: Ensure k3sadmin user exists
+  ansible.builtin.user:
+    name: k3sadmin
+    shell: /bin/bash
+    create_home: true
+
+- name: Ensure k3sadmin group exists
+  ansible.builtin.group:
+    name: k3sadmin
+    system: true
+
+- name: Ensure Helm is installed
+  ansible.builtin.shell: |
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  args:
+    creates: /usr/local/bin/helm

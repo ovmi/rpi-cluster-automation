@@ -1,0 +1,29 @@
+# The new OS is expected to boot now.
+- name: Verify EEPROM BOOT_ORDER (use vcgencmd on legacy)
+  become: true
+  command: vcgencmd bootloader_config
+  register: bootcfg
+  changed_when: false
+
+- name: Assert BOOT_ORDER matches desired
+  assert:
+    that:
+      - "'BOOT_ORDER=' ~ boot_order in bootcfg.stdout"
+    fail_msg: "EEPROM BOOT_ORDER mismatch:\n{{ bootcfg.stdout }}"
+    success_msg: "EEPROM BOOT_ORDER is {{ boot_order }}"
+
+- name: Verify root device is NVMe (optional)
+  block:
+    - name: Find current root device
+      become: true
+      command: findmnt -no SOURCE /
+      register: root_src
+      changed_when: false
+
+    - name: Assert root device matches expectation
+      assert:
+        that:
+          - root_src.stdout is match(boot_mode_expected)
+        fail_msg: "Root FS not as expected ({{ boot_mode_expected }}): {{ root_src.stdout }}"
+        success_msg: "Root FS OK: {{ root_src.stdout }}"
+  when: bootmode_verify_root

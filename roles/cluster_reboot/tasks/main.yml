@@ -1,0 +1,12 @@
+---
+- name: Trigger reboot on all cluster nodes
+  ansible.builtin.reboot:
+    msg: "Reboot started"
+    pre_reboot_delay: 5
+    reboot_timeout: 600
+    post_reboot_delay: 10
+    test_command: whoami
+
+- name: Wait for SSH to become available again
+  ansible.builtin.wait_for_connection:
+    timeout: 300

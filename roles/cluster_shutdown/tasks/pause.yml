@@ -1,0 +1,4 @@
+---
+- name: Pause to allow workers to power off
+  ansible.builtin.pause:
+    seconds: 30

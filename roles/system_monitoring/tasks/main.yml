@@ -1,0 +1,11 @@
+---
+- name: Include tasks for installing iperf3 on all nodes
+  include_tasks: install.yml
+
+- name: Include tasks for starting iperf3 server
+  include_tasks: server.yml
+  when: inventory_hostname in ['localhost', 'rpi-node0']
+
+- name: Include tasks for running iperf3 client on worker nodes
+  include_tasks: client.yml
+  when: "'workers' in group_names"

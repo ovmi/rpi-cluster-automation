@@ -1,0 +1,17 @@
+port=0   # disable DNS forwarding
+interface={{ pxe_interface | default('eth0') }}
+bind-interfaces
+log-dhcp
+
+# Proxy-DHCP setup
+dhcp-range={{ pxe_proxy_network }},proxy,{{ pxe_subnet_mask }}
+
+# PXE service string (seen by RPi bootloader)
+pxe-service=0,"Raspberry Pi Boot"
+
+# Built-in TFTP
+enable-tftp
+tftp-root={{ tftp_dir | default('/srv/tftp') }}
+
+# TFTP server IP (defaults to this host)
+dhcp-option=option:tftp-server,{{ hostvars[inventory_hostname].ansible_host }}

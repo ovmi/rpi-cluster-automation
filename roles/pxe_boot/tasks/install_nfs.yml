@@ -1,0 +1,30 @@
+- name: Install NFS server
+  ansible.builtin.package:
+    name: nfs-kernel-server
+    state: present
+
+- name: Ensure NFS dirs for workers
+  ansible.builtin.file:
+    path: "{{ nfs_root_dir }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: [ "node1-root", "node2-root", "node3-root" ]
+
+- name: Ensure exports drop-in directory exists
+  file:
+    path: /etc/exports.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Deploy exports
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports.d/cluster.exports
+    mode: "0644"
+
+- name: Export NFS
+  ansible.builtin.command: exportfs -ra
+  changed_when: true

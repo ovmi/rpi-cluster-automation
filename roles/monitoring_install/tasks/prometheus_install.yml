@@ -1,0 +1,36 @@
+- name: Create prometheus group
+  ansible.builtin.group:
+    name: "{{ prometheus_service_group }}"
+    system: true
+
+- name: Create prometheus user
+  ansible.builtin.user:
+    name: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+    shell: /usr/sbin/nologin
+    system: yes
+    create_home: false
+
+- name: Add Prometheus Community Helm repository
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
+
+- name: Deploy Prometheus stack via Helm
+  kubernetes.core.helm:
+    name: "{{ helm_release }}"
+    chart_repo_url: https://prometheus-community.github.io/helm-charts
+    chart_ref: kube-prometheus-stack
+    release_namespace: "{{ helm_namespace }}"
+    create_namespace: true
+  environment:
+    KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+
+- name: Add Prometheus hostnames to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars['rpi-node0'].ansible_host }} {{ prometheus_hostname }}"
+    state: present
+  become: true
+  delegate_to: localhost
+  run_once: true

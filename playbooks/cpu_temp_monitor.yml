@@ -1,0 +1,25 @@
+---
+- name: Install Prometheus and Grafana on control node
+  hosts: control
+  become: true
+  gather_facts: true
+  vars_files:
+    - ../inventories/production/group_vars/all/vault.yml
+    
+  roles:
+    - monitoring_install
+
+- name: Install node_exporter and temperature monitoring (bare or kube)
+  hosts: cluster
+  become: true
+  gather_facts: true
+
+  vars:
+    # Default CPU temeperature monitoring mode:
+    #   - kube (K3S cluster)
+    #   - bare (bare metal - prometheus and node-exporter binaries installation)
+    temp_monitor_mode: "kube"
+
+  roles:
+    - { role: cpu_temp_mon_bare, when: temp_monitor_mode == 'bare' }
+    - { role: cpu_temp_mon_kube,  when: temp_monitor_mode == 'kube' }

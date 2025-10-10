@@ -1,0 +1,8 @@
+---
+- name: Ping all nodes
+  ansible.builtin.ping:
+
+- name: Install iperf3 if not present
+  ansible.builtin.package:
+    name: iperf3
+    state: present

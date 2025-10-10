@@ -1,0 +1,13 @@
+---
+- name: Include Docker setup prereqs
+  include_tasks: setup_prereqs.yml
+
+- name: Include Docker repository configuration
+  include_tasks: configure_repo.yml
+
+- name: Include Docker installation
+  include_tasks: install_docker.yml
+
+- name: Include post-install configuration
+  include_tasks: post_install.yml
+  

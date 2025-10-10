@@ -1,0 +1,2 @@
+- name: Ansible version check
+  include_tasks: ansible_check.yml

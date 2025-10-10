@@ -1,0 +1,56 @@
+- name: Ensure NVMe flashing dependencies are installed
+  package:
+    name:
+      - xz-utils        # xz
+      - gzip            # gzip
+      - util-linux      # losetup, mount
+      - e2fsprogs       # e2fsck, resize2fs
+      - curl            # download (primary)
+      - wget            # download (fallback)
+      - coreutils       # dd (usually present)
+    state: present
+
+- name: Transfer NVMe flash script
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    mode: "0755"
+  loop:
+    - nvme_provision.sh
+    - patch_partitions.sh
+
+- name: Flash images to NVMe partitions
+  loop: "{{ _targets }}"
+  loop_control: { loop_var: target_node }
+  vars:
+    node_key: "{{ target_node[0] }}"
+    slot: "{{ target_node[1] }}"
+  ansible.builtin.command: >
+    /usr/local/sbin/nvme_provision.sh
+    --node "{{ node_key }}"
+    --slot "{{ slot | lower}}"
+    --image "{{ images[node_key] }}"
+    --cache "{{ image_cache_dir }}"
+    --device "{{ nvme_device }}"
+  register: provision_result
+  changed_when: provision_result.rc == 0
+  become: true
+
+- name: Patch bootfs/rootfs for node modes
+  loop: "{{ _targets }}"
+  loop_control: { loop_var: target_node }
+  vars:
+    node_key: "{{ target_node[0] }}"
+    slot: "{{ target_node[1] }}"
+    parts: "{{ nvme_partitions[node_key][slot] }}"
+    mode: "{{ 'local' if node_key == 'node0' else 'nfs' }}"
+  ansible.builtin.command: >
+    /usr/local/sbin/patch_partitions.sh
+    --node "{{ node_key }}"
+    --slot "{{ slot | lower }}"
+    --mode "{{ mode }}"
+    --boot "{{ nvme_device }}p{{ parts.boot }}"
+    --root "{{ nvme_device }}p{{ parts.root }}"
+  register: patch_result
+  changed_when: patch_result.rc == 0
+  become: true

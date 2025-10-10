@@ -1,0 +1,82 @@
+- name: Check if Ansible is running in a virtualenv
+  set_fact:
+    # ansible_facts.python.virtualenv is not always defined:
+    is_ansible_venv: "{{ '/.venv/' in ansible_playbook_python }}"
+
+- name: Determine if Ansible version is >= 2.10
+  set_fact:
+    is_ansible_2_10_plus: "{{ ansible_version.full is version('2.10', '>=') }}"
+
+- name: Set correct collections path based on environment
+  set_fact:
+    ansible_collections_path: >-
+      {{
+        '.venv/lib/python' ~ ansible_facts.python.version.major ~ '.' ~ ansible_facts.python.version.minor ~ '/site-packages/ansible/collections'
+        if is_ansible_venv else
+        lookup('env', 'HOME') ~ '/.ansible/collections'
+      }}
+
+- name: Check if community.crypto is installed
+  shell: |
+    ansible-galaxy collection list --collections-path {{ ansible_collections_path }} | grep -q community.crypto
+  register: crypto_check
+  ignore_errors: true
+  changed_when: false
+  when: is_ansible_2_10_plus
+
+- name: Install community.crypto if not present
+  shell: ansible-galaxy collection install community.crypto
+  when: crypto_check.rc != 0
+
+- name: Set compatible module names
+  set_fact:
+    openssh_keypair_module: >-
+      {{
+        'community.crypto.openssh_keypair'
+        if is_ansible_2_10_plus else
+        'ansible.builtin.openssh_keypair'
+      }}
+
+# - name: Check if kubernetes.core is installed
+#   shell: |
+#     ansible-galaxy collection list --collections-path {{ ansible_collections_path }} | grep -q kubernetes.core
+#   register: kubernetes_check
+#   ignore_errors: true
+#   changed_when: false
+#   when: is_ansible_2_10_plus
+
+# - name: Install kubernetes.core if not present
+#   shell: ansible-galaxy collection install kubernetes.core
+#   when: kubernetes_check.rc != 0
+
+- name: Set correct collections base path
+  set_fact:
+    ansible_collections_base: >-
+      {{
+        '.venv/lib/python' ~ ansible_facts.python.version.major ~ '.' ~ ansible_facts.python.version.minor ~ '/site-packages'
+        if '/.venv/' in ansible_playbook_python else
+        lookup('env', 'HOME') ~ '/.ansible/collections'
+      }}
+
+- name: Check if kubernetes.core is installed
+  shell: >
+    ansible-galaxy collection list --collections-path {{ ansible_collections_base }} | grep -q kubernetes.core
+  register: kubernetes_check
+  ignore_errors: true
+  changed_when: false
+  when: is_ansible_2_10_plus
+
+- name: Show ansible_collections_base
+  debug:
+    msg: "ansible_collections_base: {{ ansible_collections_base }}"
+  when: ansible_collections_base is defined
+
+- name: Set fallback value if kubernetes_check is undefined
+  set_fact:
+    kubernetes_check:
+      rc: 1
+  when: kubernetes_check is not defined and is_ansible_2_10_plus
+
+- name: Install kubernetes.core if not present
+  shell: ansible-galaxy collection install kubernetes.core
+  when: is_ansible_2_10_plus and kubernetes_check.rc != 0

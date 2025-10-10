@@ -1,0 +1,12 @@
+---
+- name: Include worker shutdown tasks
+  include_tasks: workers.yml
+  when: "'workers' in group_names"
+
+- name: Include pause task
+  include_tasks: pause.yml
+  when: inventory_hostname == 'localhost'
+
+- name: Include control node shutdown tasks
+  include_tasks: control.yml
+  when: "'control' in group_names"

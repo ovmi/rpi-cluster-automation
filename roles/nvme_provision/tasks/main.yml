@@ -1,0 +1,8 @@
+- name: Check parameters
+  import_tasks: check_params.yml
+
+- name: Format NVMe device
+  import_tasks: nvme_format.yml
+
+- name: Include flashing tasks
+  import_tasks: nvme_provision.yml

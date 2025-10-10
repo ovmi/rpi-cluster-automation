@@ -1,0 +1,9 @@
+---
+- name: System monitoring across cluster
+  hosts: cluster
+  become: true
+  gather_facts: true
+  serial: 1
+
+  roles:
+    - system_monitoring

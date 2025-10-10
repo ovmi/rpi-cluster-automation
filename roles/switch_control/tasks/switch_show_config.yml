@@ -1,0 +1,30 @@
+- name: Show current port settings
+  ansible.builtin.shell: >
+    {{ ntgrrc_bin }} port settings --address {{ ansible_host }}
+  register: ports_settings
+  changed_when: false
+
+- name: Print port settings
+  ansible.builtin.debug:
+    # var: ports_settings.stdout
+    msg: "{{ ports_settings.stdout_lines }}"
+
+- name: Show current poe port status
+  ansible.builtin.shell: >
+    {{ ntgrrc_bin }} poe status --address {{ ansible_host }}
+  register: poe_status
+  changed_when: false
+
+- name: Print poe port status
+  ansible.builtin.debug:
+    msg: "{{ poe_status.stdout_lines }}"
+
+- name: Show current poe port settings
+  ansible.builtin.shell: >
+    {{ ntgrrc_bin }} poe settings --address {{ ansible_host }}
+  register: poe_settings
+  changed_when: false
+
+- name: Print poe port settings
+  ansible.builtin.debug:
+    msg: "{{ poe_settings.stdout_lines }}"

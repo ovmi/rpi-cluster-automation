@@ -1,0 +1,8 @@
+---
+required_packages:
+  - vim
+  - netstat
+  - net-tools
+
+vimrc_path: "/home/{{ ansible_user }}/.vimrc"
+vimrc_src: "{{ playbook_dir }}/../files/.vimrc"

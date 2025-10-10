@@ -1,0 +1,42 @@
+- name: Configure the connection to the ethernet switch
+  include_tasks: switch_config.yml
+
+- name: Print out port settings
+  include_tasks: switch_show_config.yml
+
+- name: Configure port settings
+  include_tasks: switch_port_config.yml
+  when: configure_switch | bool
+
+- name: Configure poe settings
+  include_tasks: switch_poe_config.yml
+  when: configure_switch | bool
+
+- name: Toggle poe power on every port
+  include_tasks: switch_poe_cycle.yml
+  when: poe_action == 'toggle'
+
+- name: Enable poe power on all ports
+  include_tasks: switch_poe_enable.yml
+  when: poe_action == 'enable'
+
+- name: Disable poe power on all ports
+  include_tasks: switch_poe_disable.yml
+  when: poe_action == 'disable'
+
+- name: Wait for node to become reachable (only for PoE-enabled ports)
+  ansible.builtin.wait_for:
+    host: "{{ item.ip }}"
+    port: 22
+    delay: 5
+    timeout: 90
+    state: started
+  loop: "{{ switch_config.ports }}"
+  when: poe_action in ['enable', 'toggle']
+  register: connection_results
+
+- name: Report connection status
+  ansible.builtin.debug:
+    msg: "Node at {{ item.item.ip }} is reachable via SSH."
+  loop: "{{ connection_results.results }}"
+  when: poe_action in ['enable', 'toggle']

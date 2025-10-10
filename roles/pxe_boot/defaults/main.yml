@@ -1,0 +1,8 @@
+
+# PXE boot configuration
+pxe_interface: eth0
+pxe_proxy_network: "192.168.100.0"
+pxe_subnet_mask: "255.255.255.0"
+tftp_dir: /srv/tftp
+
+nfs_root_dir: /srv/nfs

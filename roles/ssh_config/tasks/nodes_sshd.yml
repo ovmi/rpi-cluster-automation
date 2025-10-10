@@ -1,0 +1,100 @@
+- name: Ensure ssh drop-in directory exists
+  file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Install cluster SSH policy (drop-in)
+  copy:
+    dest: /etc/ssh/sshd_config.d/99-cluster.conf
+    mode: "0644"
+    content: |
+      # Cluster SSH policy
+      PubkeyAuthentication yes
+      AuthorizedKeysFile .ssh/authorized_keys
+      PasswordAuthentication yes
+      KbdInteractiveAuthentication yes
+  become: true
+  notify: Reload SSH service
+
+- name: Ensure ~/.ssh exists
+  file:
+    path: "/home/{{ ansible_user }}/.ssh"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Show effective auth settings
+  command: bash -lc "sshd -T | egrep 'pubkeyauthentication|passwordauthentication|kbdinteractiveauthentication|authorizedkeysfile'"
+  register: ssh_effective
+  changed_when: false
+
+- name: Debug effective settings
+  debug:
+    var: ssh_effective.stdout
+
+- name: Remove stale known_hosts entries
+  known_hosts:
+    path: "{{ ssh_known_hosts | expanduser }}"
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ansible_host | default(inventory_hostname) }}"
+    - "{{ inventory_hostname }}"
+  delegate_to: localhost
+  become: false
+  ignore_errors: true
+
+- name: Remove hashed known_hosts entries (ssh-keygen -R)
+  command: "ssh-keygen -f {{ ssh_known_hosts | expanduser }} -R {{ item }}"
+  loop:
+    - "{{ ansible_host | default(inventory_hostname) }}"
+    - "{{ inventory_hostname }}"
+  changed_when: "'not found in' not in (stdout | default(''))"
+  delegate_to: localhost
+  become: false
+  failed_when: false
+
+- name: Test SSH connection with key (no password attempts)
+  ansible.builtin.shell: >
+    ssh
+    -o BatchMode=yes -o IdentitiesOnly=yes
+    -o PreferredAuthentications=publickey
+    -o PubkeyAuthentication=yes
+    -o StrictHostKeyChecking=no
+    -o UserKnownHostsFile=/dev/null
+    -o ConnectTimeout="{{ ssh_connection_timeout | default(10) }}"
+    -i "{{ (ssh_public_key_path | default(ssh_public_key_path)) | expanduser | quote }}"
+    "{{ ansible_user }}@{{ ansible_host | default(inventory_hostname) }}" 'echo OK'
+  delegate_to: localhost
+  become: false
+  register: ssh_key_test
+  changed_when: false
+  failed_when: false
+
+- name: Decide fallback to password if key test failed
+  set_fact:
+    ssh_use_password: "{{ (ssh_key_test.rc | default(1)) != 0 }}"
+
+- name: Switch connection to password (disable pubkey) for this host
+  set_fact:
+    ansible_ssh_common_args: "-o PreferredAuthentications=password,keyboard-interactive -o PubkeyAuthentication=no"
+  when: ssh_use_password
+
+- name: Test SSH connection with password
+  ansible.builtin.shell: >
+    sshpass -p '{{ ansible_pass }}'
+    ssh
+    -o PreferredAuthentications=keyboard-interactive,password
+    -o PubkeyAuthentication=no
+    -o StrictHostKeyChecking=no
+    -o UserKnownHostsFile=/dev/null
+    -o ConnectTimeout="{{ ssh_connection_timeout }}"
+    "{{ ansible_user | default(ansible_user) }}@{{ ansible_host | default(inventory_hostname) }}" 'echo OK'
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  failed_when: false
+  when: ssh_use_password

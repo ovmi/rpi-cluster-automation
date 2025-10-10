@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: Ovidiu Mihalachi
+  description: Manage SSH configuration and distribute keys to cluster nodes
+  license: MIT
+  min_ansible_version: 2.10
+  platforms:
+    - name: Debian
+      versions:
+        - all

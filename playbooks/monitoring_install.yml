@@ -1,0 +1,9 @@
+---
+- name: Cluster monitoring installation
+  hosts: control
+  become: true
+  vars_files:
+    - ../inventories/production/group_vars/all/vault.yml
+    
+  roles:
+    - monitoring_install

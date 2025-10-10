@@ -1,0 +1,57 @@
+---
+- name: Uninstall ModemManager
+  ansible.builtin.apt:
+    name: modemmanager
+    state: absent
+    purge: yes
+
+- name: Install speedtest-cli
+  ansible.builtin.apt:
+    name: speedtest-cli
+    state: present
+    update_cache: yes
+
+- name: Check if Quectel modem is connected (lsusb)
+  ansible.builtin.command: lsusb
+  register: lsusb_output
+  changed_when: false
+
+- name: Assert that Quectel modem is detected
+  ansible.builtin.assert:
+    that:
+      - "'2c7c:0125' in lsusb_output.stdout"
+    fail_msg: "Quectel modem (EC25) not detected via USB!"
+    success_msg: "Quectel modem detected successfully."
+
+- name: Check if eth1 interface exists
+  ansible.builtin.command: ip link show eth1
+  register: eth1_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Fail if eth1 is not available
+  ansible.builtin.fail:
+    msg: "eth1 interface not found. Make sure the modem is initialized."
+  when:
+    - eth1_check.rc != 0
+
+- name: Test LTE modem connectivity (ping via eth1)
+  ansible.builtin.command: ping -I eth1 -c 3 google.com # 8.8.8.8
+  register: ping_result
+  changed_when: false
+  ignore_errors: true
+
+- name: Display LTE connectivity result
+  ansible.builtin.debug:
+    var: ping_result.stdout_lines
+
+- name: Run speedtest on eth1 (LTE interface)
+  ansible.builtin.command: speedtest-cli --secure
+  register: speedtest_result
+  changed_when: false
+  ignore_errors: true
+
+- name: Display LTE download/upload speed
+  ansible.builtin.debug:
+    var: speedtest_result.stdout_lines
+    

@@ -1,0 +1,39 @@
+- name: Ensure rpi-eeprom tools present
+  package:
+    name: rpi-eeprom
+    state: present
+
+- name: Resolve boot sequence from mode
+  set_fact:
+    _seq: "{{ boot_sequences[boot_mode] }}"
+
+- name: Build BOOT_ORDER from sequence
+  set_fact:
+    boot_order: "0x{{ _seq | map('extract', boot_modes) | join('') }}"
+
+- name: Export current EEPROM config
+  command: rpi-eeprom-config --out /tmp/bootconf.txt
+  register: eeprom_config
+  changed_when: false
+
+- name: Ensure BOOT_ORDER={{ boot_order }}
+  lineinfile:
+    path: /tmp/bootconf.txt
+    regexp: '^BOOT_ORDER='
+    line: "BOOT_ORDER={{ boot_order }}"
+  register: boot_order_valid
+
+- name: Apply EEPROM config when changed
+  command: rpi-eeprom-config --apply /tmp/bootconf.txt
+  when: boot_order_valid.changed
+  register: eeprom_apply
+
+- name: Reboot (background, no wait)
+  shell: "nohup bash -c 'sleep 3; /sbin/reboot' >/dev/null 2>&1 &"
+  async: 0
+  poll: 0
+  when: boot_order_valid.changed and bootmode_reboot
+  become: true
+
+- name: Stop running tasks on this host (it’s rebooting)
+  meta: end_host

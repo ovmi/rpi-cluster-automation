@@ -1,0 +1,8 @@
+- name: Toggle poe power on every port
+  ansible.builtin.shell: |
+    {{ ntgrrc_bin }} poe cycle \
+      -p {{ item.port }} \
+      --address {{ ansible_host }}
+  loop: "{{ switch_config.ports }}"
+  when: item.power == "enable"
+  changed_when: true

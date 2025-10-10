@@ -1,0 +1,9 @@
+- name: Set ports name
+  ansible.builtin.shell: |
+    {{ ntgrrc_bin }} port set \
+      -p {{ item.port }} \
+      --name {{ item.name }} \
+      --address {{ ansible_host }}
+  loop: "{{ switch_config.ports }}"
+  when: item.name is defined
+  changed_when: true

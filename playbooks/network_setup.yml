@@ -1,0 +1,9 @@
+---
+- name: Configure cluster routing
+  hosts: cluster
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: network_setup
+  
