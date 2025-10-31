@@ -5,3 +5,7 @@
   gather_facts: true
   roles:
     - system_config
+
+  # Apply system-wide configuration changes (packages, services, dotfiles) to nodes.
+  # Example command line to run this playbook:
+  # ansible-playbook -i inventories/production/hosts playbooks/system_config.yml

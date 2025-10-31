@@ -7,3 +7,7 @@
     
   roles:
     - monitoring_install
+
+  # Install monitoring stack components such as Prometheus, Grafana, and ingress.
+  # Example command line to run this playbook:
+  # ansible-playbook -i inventories/production/hosts playbooks/monitoring_install.yml

@@ -6,4 +6,6 @@
 
   roles:
     - role: network_setup
-  
+
+  # Example command line to run this playbook:
+  # ansible-playbook -i inventories/production/hosts playbooks/network_setup.yml

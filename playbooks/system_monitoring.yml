@@ -7,3 +7,7 @@
 
   roles:
     - system_monitoring
+
+  # Install and configure system-level monitoring (node exporters, collectd, etc.).
+  # Example command line to run this playbook:
+  # ansible-playbook -i inventories/production/hosts playbooks/system_monitoring.yml

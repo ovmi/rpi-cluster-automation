@@ -5,3 +5,7 @@
 
   roles:
     - compatibility
+
+  # Run checks to verify target hosts meet minimum requirements for the playbooks (Ansible version, packages).
+  # Example command line to run this playbook locally:
+  # ansible-playbook playbooks/compatibility.yml

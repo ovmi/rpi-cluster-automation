@@ -6,3 +6,6 @@
 
   roles:
     - k3s_install
+
+  # Example command line to run this playbook:
+  # ansible-playbook playbooks/k3s_install.yml -i inventories/production/hosts

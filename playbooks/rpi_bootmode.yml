@@ -49,3 +49,7 @@
       import_role:
         name: rpi_bootmode
         tasks_from: post_reboot.yml
+
+  # Configure Raspberry Pi boot mode options (e.g., USB boot, network boot).
+  # Example command line to run this playbook (set slot A and check expected device):
+  # ansible-playbook -i inventories/production/hosts playbooks/rpi_bootmode.yml -e boot_mode=nvme_prio -e boot_mode_expected='^/dev/nvme'
