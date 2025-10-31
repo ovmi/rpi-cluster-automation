@@ -228,6 +228,12 @@ flash_os_image() {
 	# Cleanup
 	losetup -d "$LOOP"
 
+	# Before resizing, unmount rootfs if mounted
+	if mount | grep -q "$ROOT_DEV"; then
+		echo "Unmounting $ROOT_DEV before resize..."
+		umount "$ROOT_DEV" || umount -l "$ROOT_DEV"
+	fi
+
 	# Resize rootfs
 	log INFO "Resizing rootfs on $ROOT_DEV..."
 	e2fsck -f "$ROOT_DEV" || true
