@@ -79,7 +79,7 @@
     remote_src: true
 
 - name: Update kubeconfig server address
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "/home/{{ ansible_user }}/.kube/config"
     regexp: '^    server:'
     line: '    server: https://{{ ansible_host }}:6443'

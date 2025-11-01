@@ -28,7 +28,7 @@
     KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
 
 - name: Add Grafana hostnames to /etc/hosts
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/hosts
     line: "{{ hostvars['rpi-node0'].ansible_host }} {{ grafana_hostname }}"
     state: present

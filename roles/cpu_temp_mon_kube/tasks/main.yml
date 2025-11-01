@@ -1,15 +1,15 @@
 ---
 - name: Configure Node Exporter in K3S cluster
-  import_tasks: node_exporter_config.yml
+  ansible.builtin.import_tasks: node_exporter_config.yml
   when: inventory_hostname == groups['control'][0]
 
 - name: Configure Grafana in K3S cluster
-  import_tasks: grafana_config.yml
+  ansible.builtin.import_tasks: grafana_config.yml
   when: inventory_hostname == groups['control'][0]
 
 - name: Upgrade deployed Helm chart
-  import_tasks: upgrade_release_chart.yml
+  ansible.builtin.import_tasks: upgrade_release_chart.yml
   when: inventory_hostname == groups['control'][0]
 
 - name: Configure CPU temperature monitoring
-  import_tasks: cpu_temp_mon_config.yml
+  ansible.builtin.import_tasks: cpu_temp_mon_config.yml

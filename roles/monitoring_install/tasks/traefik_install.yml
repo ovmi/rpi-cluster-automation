@@ -6,7 +6,7 @@
   failed_when: false
 
 - name: Set flag if Traefik is not deployed
-  set_fact:
+  ansible.builtin.set_fact:
     traefik_needs_install: "{{ traefik_check.stdout_lines | length == 0 }}"
 
 - name: Ensure Traefik namespace exists

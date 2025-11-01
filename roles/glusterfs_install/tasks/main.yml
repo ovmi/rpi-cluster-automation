@@ -1,14 +1,14 @@
 ---
 - name: Include setup tasks
-  import_tasks: setup.yml
+  ansible.builtin.import_tasks: setup.yml
 
 - name: Include brick node tasks
-  import_tasks: brick_node.yml
+  ansible.builtin.import_tasks: brick_node.yml
   when: inventory_hostname == gluster_brick_node
 
 - name: Include control node tasks
-  import_tasks: control_node.yml
+  ansible.builtin.import_tasks: control_node.yml
   when: inventory_hostname in groups['control']
 
 - name: Include mount volume tasks
-  import_tasks: mount_volume.yml
+  ansible.builtin.import_tasks: mount_volume.yml

@@ -15,7 +15,7 @@
     definition: "{{ lookup('template', 'gluster-pvc.yaml.j2') }}"
 
 - name: Run gluster pod test
-  include_tasks: gluster_pod_test.yml
+  ansible.builtin.include_tasks: gluster_pod_test.yml
 
 - name: Deploy production pod using GlusterFS
-  include_tasks: hostpath-deployment.yaml
+  ansible.builtin.include_tasks: hostpath-deployment.yaml

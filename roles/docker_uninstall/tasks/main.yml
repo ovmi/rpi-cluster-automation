@@ -58,5 +58,5 @@
   ignore_errors: yes
 
 - name: Show Docker version output
-  debug:
+  ansible.builtin.debug:
     var: docker_version.stdout

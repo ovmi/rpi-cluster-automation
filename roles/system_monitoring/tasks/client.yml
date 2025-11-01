@@ -1,21 +1,21 @@
 ---
 - name: Run iperf3 client test on all nodes except master rpi-node0
-  shell: "iperf3 -c {{ iperf_server_host }} -t 10"
+  ansible.builtin.shell: "iperf3 -c {{ iperf_server_host }} -t 10"
   register: iperf_result
   ignore_errors: true
 
-- debug:
+- ansible.builtin.debug:
     msg: "Network performance on {{ inventory_hostname }}: {{ iperf_result.stdout }}"
   when: iperf_result.stdout is defined
 
 - name: Extract TX and RX performance numbers
-  set_fact:
+  ansible.builtin.set_fact:
     tx_speed: "{{ (iperf_result.stdout | regex_search('\\[  5\\]   0\\.00-10\\.00  sec  .*? ([0-9.]+) Mbits/sec', '\\1') | first | default('N/A')) }}"
     rx_speed: "{{ (iperf_result.stdout | regex_search('\\[  5\\]   0\\.00-10\\.00  sec  .*? ([0-9.]+) Mbits/sec', '\\1') | last | default('N/A')) }}"
   when: iperf_result.rc == 0
 
 - name: Display iperf3 results
-  debug:
+  ansible.builtin.debug:
     msg: |
       📡 **iperf3 Test Results for {{ inventory_hostname }}**
       -----------------------------------

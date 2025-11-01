@@ -1,29 +1,29 @@
 ---
 - name: Update and upgrade apt packages
-  apt:
+  ansible.builtin.apt:
     update_cache: yes
     upgrade: full
 
 - name: Install dependencies
-  apt:
+  ansible.builtin.apt:
     name:
       - curl
       - apt-transport-https
     state: present
 
 - name: Get k3s token from control node
-  shell: cat /var/lib/rancher/k3s/server/node-token
+  ansible.builtin.shell: cat /var/lib/rancher/k3s/server/node-token
   register: k3s_token
   delegate_to: "{{ groups['control'][0] }}"
 
 - name: Join the k3s cluster
-  shell: |
+  ansible.builtin.shell: |
     curl -sfL https://get.k3s.io | K3S_URL=https://{{ hostvars[groups['control'][0]].ansible_host }}:6443 K3S_TOKEN={{ k3s_token.stdout }} sh -
   args:
     creates: /usr/local/bin/k3s-agent
 
 - name: Enable and start k3s-agent service
-  systemd:
+  ansible.builtin.systemd:
     name: k3s-agent
     enabled: yes
     state: started

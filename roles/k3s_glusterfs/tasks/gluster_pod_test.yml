@@ -22,7 +22,7 @@
   register: pod_output
 
 - name: Show result of volume write test
-  debug:
+  ansible.builtin.debug:
     msg: "Content of /data/test.txt in test pod: {{ pod_output.stdout }}"
 
 - name: Clean up test pod

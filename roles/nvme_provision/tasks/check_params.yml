@@ -1,29 +1,27 @@
 - name: Validate nvme_slots parameter
-  assert:
+  ansible.builtin.assert:
     that:
       - (nvme_slot) in ['A','B']
     fail_msg: "nvme_slot must be 'A' or 'B' (got: {{ nvme_slot }})"
 
 - name: Collect all logical nodes from nvme_partitions
-  set_fact:
+  ansible.builtin.set_fact:
     _all_nodes: "{{ nvme_partitions.keys() | list }}"
 
-# 1) Strip spaces from the raw input
 - name: Normalize nvme_nodes (raw)
-  set_fact:
+  ansible.builtin.set_fact:
     _nodes_raw: "{{ (nvme_nodes | default('') | string) | regex_replace('\\s+', '') }}"
 
-# 2) Parse comma-separated into list; empty -> []
 - name: Normalize nvme_nodes (list)
-  set_fact:
+  ansible.builtin.set_fact:
     _nodes: "{{ (_nodes_raw | length > 0) | ternary((_nodes_raw | regex_findall('[^,]+') | list), []) }}"
 
 - name: Compute selected nodes
-  set_fact:
+  ansible.builtin.set_fact:
     _selected_nodes: "{{ (_nodes | length > 0) | ternary(_nodes, _all_nodes) }}"
 
 - name: Validate selected nodes exist in nvme_partitions
-  assert:
+  ansible.builtin.assert:
     that:
       - _selected_nodes | length > 0
       - (_selected_nodes | difference(_all_nodes)) | length == 0
@@ -32,7 +30,7 @@
       Known: {{ _all_nodes | join(', ') }}
 
 - name: Ensure images exist for selected nodes
-  assert:
+  ansible.builtin.assert:
     that:
       - (_selected_nodes | map('extract', images) | list) | select('defined') | list | length == _selected_nodes | length
     fail_msg: >-
@@ -40,5 +38,5 @@
         _selected_nodes | reject('in', images.keys() | list) | list | join(', ') }}
 
 - name: Compute node/slot targets (single slot assumed validated elsewhere)
-  set_fact:
+  ansible.builtin.set_fact:
     _targets: "{{ _selected_nodes | product([nvme_slot]) | list }}"

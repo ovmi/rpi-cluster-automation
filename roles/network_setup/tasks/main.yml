@@ -30,7 +30,7 @@
   when: inventory_hostname == 'rpi-node3'
 
 - name: Debug rpi-node3 ansible_default_ipv4 address
-  debug:
+  ansible.builtin.debug:
     msg: "rpi-node3 default IP is {{ hostvars['rpi-node3'].ansible_default_ipv4.address }}"
 
 - name: Enable IP forwarding

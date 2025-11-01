@@ -1,15 +1,15 @@
 ---
 - name: Read current cmdline
-  slurp:
+  ansible.builtin.slurp:
     src: /boot/firmware/cmdline.txt
   register: cmdline_raw
 
 - name: Decode cmdline content
-  set_fact:
+  ansible.builtin.set_fact:
     cmdline_line: "{{ cmdline_raw.content | b64decode | replace('\n', ' ') | trim }}"
 
 - name: Add cgroup options only if missing
-  copy:
+  ansible.builtin.copy:
     dest: /boot/firmware/cmdline.txt
     content: >-
       {{ (cmdline_line.split() + ['cgroup_memory=1', 'cgroup_enable=memory']) | unique | join(' ') }}

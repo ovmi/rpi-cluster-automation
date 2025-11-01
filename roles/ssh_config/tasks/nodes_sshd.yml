@@ -1,12 +1,12 @@
 - name: Ensure ssh drop-in directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/ssh/sshd_config.d
     state: directory
     mode: "0755"
   become: true
 
 - name: Install cluster SSH policy (drop-in)
-  copy:
+  ansible.builtin.copy:
     dest: /etc/ssh/sshd_config.d/99-cluster.conf
     mode: "0644"
     content: |
@@ -19,7 +19,7 @@
   notify: Reload SSH service
 
 - name: Ensure ~/.ssh exists
-  file:
+  ansible.builtin.file:
     path: "/home/{{ ansible_user }}/.ssh"
     state: directory
     owner: "{{ ansible_user }}"
@@ -27,16 +27,16 @@
     mode: "0700"
 
 - name: Show effective auth settings
-  command: bash -lc "sshd -T | egrep 'pubkeyauthentication|passwordauthentication|kbdinteractiveauthentication|authorizedkeysfile'"
+  ansible.builtin.command: bash -lc "sshd -T | egrep 'pubkeyauthentication|passwordauthentication|kbdinteractiveauthentication|authorizedkeysfile'"
   register: ssh_effective
   changed_when: false
 
 - name: Debug effective settings
-  debug:
+  ansible.builtin.debug:
     var: ssh_effective.stdout
 
 - name: Remove stale known_hosts entries
-  known_hosts:
+  ansible.builtin.known_hosts:
     path: "{{ ssh_known_hosts | expanduser }}"
     name: "{{ item }}"
     state: absent
@@ -48,7 +48,7 @@
   ignore_errors: true
 
 - name: Remove hashed known_hosts entries (ssh-keygen -R)
-  command: "ssh-keygen -f {{ ssh_known_hosts | expanduser }} -R {{ item }}"
+  ansible.builtin.command: "ssh-keygen -f {{ ssh_known_hosts | expanduser }} -R {{ item }}"
   loop:
     - "{{ ansible_host | default(inventory_hostname) }}"
     - "{{ inventory_hostname }}"
@@ -75,11 +75,11 @@
   failed_when: false
 
 - name: Decide fallback to password if key test failed
-  set_fact:
+  ansible.builtin.set_fact:
     ssh_use_password: "{{ (ssh_key_test.rc | default(1)) != 0 }}"
 
 - name: Switch connection to password (disable pubkey) for this host
-  set_fact:
+  ansible.builtin.set_fact:
     ansible_ssh_common_args: "-o PreferredAuthentications=password,keyboard-interactive -o PubkeyAuthentication=no"
   when: ssh_use_password
 

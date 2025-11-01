@@ -1,5 +1,5 @@
 - name: Install Debian archive keyring
-  apt:
+  ansible.builtin.apt:
     name: debian-archive-keyring
     state: present
     update_cache: yes
@@ -11,7 +11,7 @@
     cache_valid_time: 3600
 
 - name: Add backports repository
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb http://deb.debian.org/debian {{ ansible_distribution_release }}-backports main"
     state: present
     filename: "{{ ansible_distribution_release }}-backports"

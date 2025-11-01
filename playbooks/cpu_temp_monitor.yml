@@ -24,5 +24,7 @@
     - { role: cpu_temp_mon_bare, when: temp_monitor_mode == 'bare' }
     - { role: cpu_temp_mon_kube,  when: temp_monitor_mode == 'kube' }
 
+  # Install and configure CPU temperature monitoring (Prometheus + exporters) for cluster nodes.
   # Example command to run the temperature monitoring playbook (override mode):
   # ansible-playbook -i inventories/production/hosts playbooks/cpu_temp_monitor.yml -e temp_monitor_mode=bare
+  # Uses roles `cpu_temp_mon_bare` or `cpu_temp_mon_kube` depending on configuration.

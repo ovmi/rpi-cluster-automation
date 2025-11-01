@@ -1,7 +1,7 @@
 - name: Setup ssh on localhost and distribute keys to cluster nodes
-  import_tasks: controller_keys.yml
+  ansible.builtin.import_tasks: controller_keys.yml
   when: inventory_hostname in groups['local']
 
 - name: Install SSH key and configure passwordless SSH
-  import_tasks: nodes_sshd.yml
+  ansible.builtin.import_tasks: nodes_sshd.yml
   when: inventory_hostname in groups['cluster']

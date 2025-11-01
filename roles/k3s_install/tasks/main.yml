@@ -1,12 +1,12 @@
 ---
 - name: Configure cgroup settings
-  include_tasks: cgroup.yml
+  ansible.builtin.include_tasks: cgroup.yml
 
 - name: Install K3S on control nodes
-  include_tasks: install_control.yml
+  ansible.builtin.include_tasks: install_control.yml
   when: "'control' in group_names"
 
 - name: Join worker nodes to cluster
-  include_tasks: install_workers.yml
+  ansible.builtin.include_tasks: install_workers.yml
   when: "'workers' in group_names"
   

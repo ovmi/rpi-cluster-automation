@@ -1,16 +1,15 @@
 ---
 - name: Include monitoring setup prereqs
-  import_tasks: setup_prereqs.yml
+  ansible.builtin.import_tasks: setup_prereqs.yml
 
 - name: Install and configure Prometheus
-  import_tasks: prometheus_install.yml
+  ansible.builtin.import_tasks: prometheus_install.yml
 
 - name: Install and configure Grafana 
-  import_tasks: grafana_install.yml
+  ansible.builtin.import_tasks: grafana_install.yml
 
 - name: Install and configure Traefik Ingress Controller
-  import_tasks: traefik_install.yml
+  ansible.builtin.import_tasks: traefik_install.yml
 
 - name: Setup ingress for Traefik
-  import_tasks: ingress_config.yml
-  
+  ansible.builtin.import_tasks: ingress_config.yml

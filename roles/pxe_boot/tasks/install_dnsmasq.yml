@@ -5,7 +5,7 @@
     update_cache: yes
 
 - name: Ensure dnsmasq drop-in directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/dnsmasq.d
     state: directory
     mode: "0755"

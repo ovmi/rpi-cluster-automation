@@ -1,5 +1,5 @@
 ---
 - name: Start iperf3 server
-  shell: "nohup iperf3 -s > /dev/null 2>&1 &"
+  ansible.builtin.shell: "nohup iperf3 -s > /dev/null 2>&1 &"
   async: 5
   poll: 0

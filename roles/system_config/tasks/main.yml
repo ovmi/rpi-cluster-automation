@@ -1,2 +1,2 @@
 - name: Install essential packages
-  import_tasks: install_packages.yml
+  ansible.builtin.import_tasks: install_packages.yml

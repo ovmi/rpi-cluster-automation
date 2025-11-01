@@ -13,7 +13,7 @@
   loop: [ "node1-root", "node2-root", "node3-root" ]
 
 - name: Ensure exports drop-in directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/exports.d
     state: directory
     mode: "0755"

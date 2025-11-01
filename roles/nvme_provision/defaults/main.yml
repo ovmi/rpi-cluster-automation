@@ -1,4 +1,3 @@
-
 nvme_device: "/dev/nvme0n1"   # default NVMe device
 nvme_nodes: []                # [] means “all nodes in nvme_partitions”
 nvme_slot: "A"                # valid values: "A", "B"
@@ -7,13 +6,13 @@ nvme_format: no
 # Partition map
 nvme_partitions:
   node0:
-    A: { boot: 1,  root: 2  }
-    B: { boot: 3,  root: 4  }
+    A: { boot: 1, root: 2 }
+    B: { boot: 3, root: 4 }
   node1:
-    A: { boot: 5,  root: 6  }
-    B: { boot: 7,  root: 8  }
+    A: { boot: 5, root: 6 }
+    B: { boot: 7, root: 8 }
   node2:
-    A: { boot: 9,  root: 10 }
+    A: { boot: 9, root: 10 }
     B: { boot: 11, root: 12 }
   node3:
     A: { boot: 13, root: 14 }

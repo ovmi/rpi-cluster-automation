@@ -1,6 +1,6 @@
 ---
 - name: Set Docker repo variables
-  set_fact:
+  ansible.builtin.set_fact:
     docker_repo_base: >-
       {% if ansible_distribution == 'Ubuntu' %}
         https://download.docker.com/linux/ubuntu

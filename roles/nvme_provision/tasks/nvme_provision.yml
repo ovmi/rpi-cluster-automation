@@ -1,5 +1,5 @@
 - name: Ensure NVMe flashing dependencies are installed
-  package:
+  ansible.builtin.package:
     name:
       - xz-utils        # xz
       - gzip            # gzip
@@ -28,7 +28,7 @@
   ansible.builtin.command: >
     /usr/local/sbin/nvme_provision.sh
     --node "{{ node_key }}"
-    --slot "{{ slot | lower}}"
+    --slot "{{ slot | lower }}"
     --image "{{ images[node_key] }}"
     --cache "{{ image_cache_dir }}"
     --device "{{ nvme_device }}"
