@@ -29,6 +29,8 @@
 
 - name: Update local Helm repo cache
   ansible.builtin.command: helm repo update
+  change_when: false
+  when: traefik_needs_install
 
 - name: Install Traefik via Helm
   kubernetes.core.helm:

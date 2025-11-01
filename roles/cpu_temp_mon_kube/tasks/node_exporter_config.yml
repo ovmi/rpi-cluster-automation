@@ -21,10 +21,9 @@
     mode: "{{ node_exporter_mode }}"
 
 - name: Ensure temperature.prom exists with correct ownership and permissions
-  file:
+  ansible.builtin.file:
     path: "{{ node_exporter_collector }}/temperature.prom"
     state: touch
     owner: "{{ node_exporter_user }}"
     group: "{{ node_exporter_group }}"
     mode: '0644'
-

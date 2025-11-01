@@ -13,6 +13,7 @@
     success_msg: "EEPROM BOOT_ORDER is {{ boot_order }}"
 
 - name: Verify root device is NVMe (optional)
+  when: bootmode_verify_root
   block:
     - name: Find current root device
       become: true
@@ -26,4 +27,3 @@
           - root_src.stdout is match(boot_mode_expected)
         fail_msg: "Root FS not as expected ({{ boot_mode_expected }}): {{ root_src.stdout }}"
         success_msg: "Root FS OK: {{ root_src.stdout }}"
-  when: bootmode_verify_root

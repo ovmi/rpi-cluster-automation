@@ -1,7 +1,7 @@
 ---
 - name: Update and upgrade apt packages
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     upgrade: full
 
 - name: Install dependencies
@@ -25,5 +25,5 @@
 - name: Enable and start k3s-agent service
   ansible.builtin.systemd:
     name: k3s-agent
-    enabled: yes
+    enabled: true
     state: started

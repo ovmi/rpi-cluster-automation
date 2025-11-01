@@ -10,4 +10,3 @@
 
 - name: Include post-install configuration
   ansible.builtin.include_tasks: post_install.yml
-  

@@ -56,7 +56,7 @@
   ansible.builtin.copy:
     src: ".vimrc"
     dest: "/home/{{ ansible_user }}/.vimrc"
-    mode: 0600
+    mode: "0600"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   when: not vimrc_stat.stat.exists
@@ -79,7 +79,7 @@
 
 - name: Remove dependencies that are no longer required.
   ansible.builtin.apt:
-    autoremove: yes
+    autoremove: true
 
 - name: Show installed packages
   ansible.builtin.debug:

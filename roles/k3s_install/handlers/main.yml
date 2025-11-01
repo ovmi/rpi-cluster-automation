@@ -1,10 +1,10 @@
 ---
-- name: reboot-node
+- name: Reboot cluster node
   ansible.builtin.reboot:
     pre_reboot_delay: 3
     reboot_timeout: 600
 
-- name: wait-for-node
+- name: Wait for node to come back online
   ansible.builtin.wait_for_connection:
     delay: 5
     timeout: 120

@@ -2,25 +2,25 @@
 - name: Check if Docker service exists
   ansible.builtin.shell: systemctl is-active docker
   register: docker_service_status
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Stop Docker service if it is active
   ansible.builtin.systemd:
     name: docker
     state: stopped
-    enabled: no
+    enabled: false
   when: docker_service_status.rc == 0
 
 - name: Check if containerd service exists
   ansible.builtin.shell: systemctl is-active containerd
   register: containerd_service_status
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Stop containerd service if it is active
   ansible.builtin.systemd:
     name: containerd
     state: stopped
-    enabled: no
+    enabled: false
   when: containerd_service_status.rc == 0
 
 - name: Remove Docker packages
@@ -30,7 +30,7 @@
       - docker-ce-cli
       - containerd.io
     state: absent
-    purge: yes
+    purge: true
 
 - name: Remove Docker's official GPG key
   ansible.builtin.file:
@@ -39,9 +39,9 @@
 
 - name: Cleanup unused dependencies
   ansible.builtin.apt:
-    autoremove: yes
-    autoclean: yes
-    update_cache: yes
+    autoremove: true
+    autoclean: true
+    update_cache: true
 
 - name: Remove Docker directories
   ansible.builtin.file:
@@ -55,7 +55,7 @@
 - name: Verify Docker is removed
   ansible.builtin.command: docker --version
   register: docker_version
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Show Docker version output
   ansible.builtin.debug:

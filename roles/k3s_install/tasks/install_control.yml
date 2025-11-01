@@ -1,7 +1,7 @@
 ---
 - name: Update and upgrade apt packages
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     upgrade: full
 
 - name: Install dependencies
@@ -17,7 +17,7 @@
       - python3
       - python3-pip
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Download and install k3s
   ansible.builtin.shell: |
@@ -28,7 +28,7 @@
 - name: Enable and start k3s service
   ansible.builtin.systemd:
     name: k3s
-    enabled: yes
+    enabled: true
     state: started
 
 - name: Install Kubernetes Python client library

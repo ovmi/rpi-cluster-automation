@@ -2,6 +2,9 @@
   ansible.builtin.template:
     src: release-values.yaml.j2
     dest: /tmp/release_values.yaml
+    owner: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+    mode: '0644'
 
 - name: Upgrade release via Helm with custom values file
   ansible.builtin.command:
@@ -16,7 +19,3 @@
   register: helm_result
   changed_when: "'Release \\\"{{ helm_release }}\\\" has been upgraded' in helm_result.stdout"
   failed_when: helm_result.rc != 0
-
-# - name: Show Helm result
-#   debug:
-#     var: helm_result

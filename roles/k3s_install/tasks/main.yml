@@ -9,4 +9,3 @@
 - name: Join worker nodes to cluster
   ansible.builtin.include_tasks: install_workers.yml
   when: "'workers' in group_names"
-  
