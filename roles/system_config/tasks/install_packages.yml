@@ -2,12 +2,12 @@
   ansible.builtin.apt:
     name: debian-archive-keyring
     state: present
-    update_cache: yes
+    update_cache: true
   when: ansible_distribution_release in ["bookworm", "bullseye"]
 
 - name: Update package cache
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 3600
 
 - name: Add backports repository

@@ -4,7 +4,8 @@
   register: iperf_result
   ignore_errors: true
 
-- ansible.builtin.debug:
+- name: Debug iperf3 output
+  ansible.builtin.debug:
     msg: "Network performance on {{ inventory_hostname }}: {{ iperf_result.stdout }}"
   when: iperf_result.stdout is defined
 

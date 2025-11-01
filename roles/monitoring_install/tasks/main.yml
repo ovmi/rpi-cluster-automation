@@ -5,7 +5,7 @@
 - name: Install and configure Prometheus
   ansible.builtin.import_tasks: prometheus_install.yml
 
-- name: Install and configure Grafana 
+- name: Install and configure Grafana
   ansible.builtin.import_tasks: grafana_install.yml
 
 - name: Install and configure Traefik Ingress Controller

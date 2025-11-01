@@ -31,4 +31,3 @@
     - prometheus_ingress.yaml
   environment:
     KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
-

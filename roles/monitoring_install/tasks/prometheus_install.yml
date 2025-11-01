@@ -8,7 +8,7 @@
     name: "{{ prometheus_service_user }}"
     group: "{{ prometheus_service_group }}"
     shell: /usr/sbin/nologin
-    system: yes
+    system: true
     create_home: false
 
 - name: Add Prometheus Community Helm repository

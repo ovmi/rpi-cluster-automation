@@ -19,4 +19,3 @@
     - reboot-node
     - wait-for-node
   changed_when: true
-

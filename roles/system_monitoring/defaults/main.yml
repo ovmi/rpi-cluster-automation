@@ -1,2 +1,2 @@
-iperf_server_host: "{{ hostvars['rpi-node0'].ansible_host}}"
-cpu_temp_threshold: 70 
+iperf_server_host: "{{ hostvars['rpi-node0'].ansible_host }}"
+cpu_temp_threshold: 70

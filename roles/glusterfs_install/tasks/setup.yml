@@ -2,10 +2,10 @@
   ansible.builtin.apt:
     name: ["glusterfs-server", "glusterfs-client"]
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Ensure GlusterFS service is enabled and started
   ansible.builtin.systemd:
     name: glusterd
-    enabled: yes
+    enabled: true
     state: started

@@ -1,6 +1,7 @@
 ---
 - name: Ensure all unsaved data is flushed to disk
-  ansible.builtin.shell: sync
+  ansible.builtin.command: sync
+  changed_when: false
 
 - name: Shutdown control node with delay
   ansible.builtin.command: /sbin/shutdown -h +1 "Shuting down in 1 minute..."
