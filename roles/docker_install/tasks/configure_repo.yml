@@ -42,4 +42,4 @@
   ansible.builtin.copy:
     src: /etc/apt/keyrings/docker.asc
     dest: /etc/apt/trusted.gpg.d/docker.asc
-    remote_src: yes
+    remote_src: true

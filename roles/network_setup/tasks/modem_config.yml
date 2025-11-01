@@ -54,4 +54,3 @@
 - name: Display LTE download/upload speed
   ansible.builtin.debug:
     var: speedtest_result.stdout_lines
-    

@@ -29,7 +29,7 @@
   ansible.builtin.unarchive:
     src: /tmp/node_exporter.tar.gz
     dest: /tmp/
-    remote_src: yes
+    remote_src: true
 
 - name: Install Node Exporter binary
   ansible.builtin.copy:
@@ -38,7 +38,7 @@
     mode: '0755'
     owner: "{{ node_exporter_user }}"
     group: "{{ node_exporter_group }}"
-    remote_src: yes
+    remote_src: true
 
 - name: Ensure textfile_collector directory exists
   ansible.builtin.file:
@@ -51,7 +51,7 @@
 - name: Install systemd service for Node Exporter
   ansible.builtin.template:
     src: node_exporter.service.j2
-    dest: "{{ node_exporter_service_file}}"
+    dest: "{{ node_exporter_service_file }}"
     owner: "{{ node_exporter_user }}"
     group: "{{ node_exporter_group }}"
     mode: "{{ node_exporter_service_mode }}"
@@ -65,6 +65,6 @@
 
 - name: Verify Node Exporter is running
   ansible.builtin.systemd:
-    name: "{{ node_exporter_service_name}}"
+    name: "{{ node_exporter_service_name }}"
     state: started
     enabled: true

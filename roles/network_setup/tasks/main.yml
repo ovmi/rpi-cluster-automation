@@ -34,7 +34,7 @@
     msg: "rpi-node3 default IP is {{ hostvars['rpi-node3'].ansible_default_ipv4.address }}"
 
 - name: Enable IP forwarding
-  ansible.builtin.sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: "1"
     state: present
@@ -111,6 +111,6 @@
 - name: Enable and start route-switch service
   ansible.builtin.systemd:
     name: route-switch
-    enabled: yes
+    enabled: true
     state: started
   when: inventory_hostname == 'rpi-node3'
