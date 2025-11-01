@@ -5,6 +5,7 @@
 
 - name: Update local Helm repo cache
   ansible.builtin.command: helm repo update
+  changed_when: false
 
 - name: Create monitoring namespace
   kubernetes.core.k8s:

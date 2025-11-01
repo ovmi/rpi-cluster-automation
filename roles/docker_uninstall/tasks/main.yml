@@ -56,6 +56,7 @@
   ansible.builtin.command: docker --version
   register: docker_version
   ignore_errors: true
+  changed_when: false
 
 - name: Show Docker version output
   ansible.builtin.debug:
