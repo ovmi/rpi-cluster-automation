@@ -1,8 +1,10 @@
 ---
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
 - name: Check if Docker service exists
-  ansible.builtin.shell: systemctl is-active docker
-  register: docker_service_status
-  ignore_errors: true
+  ansible.builtin.set_fact:
+    docker_service_status: "{{ 'docker.service' in services }}"
 
 - name: Stop Docker service if it is active
   ansible.builtin.systemd:
@@ -12,9 +14,8 @@
   when: docker_service_status.rc == 0
 
 - name: Check if containerd service exists
-  ansible.builtin.shell: systemctl is-active containerd
-  register: containerd_service_status
-  ignore_errors: true
+  ansible.builtin.set_fact:
+    containerd_service_status: "{{ 'containerd.service' in services }}"
 
 - name: Stop containerd service if it is active
   ansible.builtin.systemd:

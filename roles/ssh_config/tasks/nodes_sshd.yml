@@ -45,17 +45,22 @@
     - "{{ inventory_hostname }}"
   delegate_to: localhost
   become: false
-  ignore_errors: true
+  register: remove_known_hosts
+  failed_when: false
+  changed_when: remove_known_hosts.changed
 
 - name: Remove hashed known_hosts entries (ssh-keygen -R)
   ansible.builtin.command: "ssh-keygen -f {{ ssh_known_hosts | expanduser }} -R {{ item }}"
   loop:
     - "{{ ansible_host | default(inventory_hostname) }}"
     - "{{ inventory_hostname }}"
-  changed_when: "'not found in' not in (stdout | default(''))"
+  register: remove_ssh_key
   delegate_to: localhost
   become: false
-  failed_when: false
+  failed_when: remove_ssh_key.rc not in [0, 1]
+  changed_when: >
+    'not found in' not in (sshkey_rm.stdout | default(''))
+
 
 - name: Test SSH connection with key (no password attempts)
   ansible.builtin.shell: >

@@ -2,6 +2,7 @@
 - name: Run iperf3 client test on all nodes except master rpi-node0
   ansible.builtin.shell: "iperf3 -c {{ iperf_server_host }} -t 10"
   register: iperf_result
+  change_when: false
   ignore_errors: true
 
 - name: Debug iperf3 output

@@ -27,9 +27,10 @@
   run_once: true
 
 - name: Clean up existing host keys
-  ansible.builtin.shell: "ssh-keygen -R {{ ansible_host | default(inventory_hostname) }} || true"
-  ignore_errors: true
-  changed_when: false
+  ansible.builtin.command: "ssh-keygen -R {{ ansible_host | default(inventory_hostname) }}"
+  register: ssh_keygen_cleanup
+  changed_when: "'updated' in ssh_keygen_cleanup.stdout"
+  failed_when: ssh_key_cleanup.rc not in [0,1]
 
 - name: Scan and save host keys
   ansible.builtin.shell: "ssh-keyscan -H {{ ansible_host | default(inventory_hostname) }} >> {{ ssh_known_hosts | expanduser }}"

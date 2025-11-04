@@ -1,36 +1,38 @@
-- name: Check if the GlusterFS brick directory exists
-  ansible.builtin.stat:
-    path: /mnt/glusterfs-brick
-  register: brick_dir_check
-
-- name: Create GlusterFS brick directory on the brick node
+- name: Ensure GlusterFS brick directory exists
   ansible.builtin.file:
     path: /mnt/glusterfs-brick
     state: directory
     owner: root
     group: root
     mode: '0755'
-  when: brick_dir_check.stat.exists == false
 
 - name: Detect filesystem type of /dev/sda
   ansible.builtin.command: lsblk -no FSTYPE /dev/sda
   register: sda_fstype
   changed_when: false
 
-- name: Fail if already formatted (unless allow_format = true)
+- name: Fail if /dev/sda is already formatted (unless allow_format=true)
   ansible.builtin.fail:
-    msg: "/dev/sda already has a filesystem: {{ sda_fs_check.stdout }} — refusing to format!"
+    msg: "/dev/sda already has a filesystem: {{ sda_fstype.stdout }} — refusing to format!"
   when:
-    - sda_fs_check.stdout != ""
-    - not allow_format | default(false)
+    - sda_fstype.stdout != ""
+    - not (allow_format | default(false))
 
-- name: Format the hard drive only if unformatted
-  ansible.builtin.command: mkfs.ext4 /dev/sda
-  when: sda_fstype.stdout == ""
-
-- name: Mount the hard drive on the brick node
-  ansible.builtin.mount:
-    path: /mnt/glusterfs-brick
-    src: /dev/sda
+- name: Create ext4 filesystem on /dev/sda if not present
+  community.general.filesystem:
     fstype: ext4
+    dev: /dev/sda
+  when: not sda_fstype.stdout
+
+- name: Get disk UUID
+  ansible.builtin.command: blkid -s UUID -o value /dev/sda
+  register: sda_uuid
+  changed_when: false
+
+- name: Mount GlusterFS brick via UUID
+  ansible.posix.mount:
+    path: /mnt/glusterfs-brick
+    src: "UUID={{ sda_uuid.stdout }}"
+    fstype: ext4
+    opts: defaults,noatime
     state: mounted

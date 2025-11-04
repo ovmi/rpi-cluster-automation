@@ -1,18 +1,18 @@
 # Docmentation: https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-boot-modes
 
 boot_modes:
-  sd:       "1"   # SD card boot
-  net:      "2"   # Network boot - PXE
-  rpiboot:  "3"   # Raspberry Pi boot (USB or network)
-  usb:      "4"   # USB mass storage boot
-  nvme:     "6"   # PCIe NVMe (on Pi 5) or USB->NVMe adapters (Pi 4 via USB boot)
-  http:     "7"   # HTTP boot over ethernet
-  restart:  "f"   # Restart from the first boot-mode
+  sd: "1"   # SD card boot
+  net: "2"   # Network boot - PXE
+  rpiboot: "3"   # Raspberry Pi boot (USB or network)
+  usb: "4"   # USB mass storage boot
+  nvme: "6"   # PCIe NVMe (on Pi 5) or USB->NVMe adapters (Pi 4 via USB boot)
+  http: "7"   # HTTP boot over ethernet
+  restart: "f"   # Restart from the first boot-mode
 
-boot_sequences: 
-  nvme_prio:    ["restart", "usb", "sd", "nvme"]
-  sdcard_prio:  ["restart", "usb", "nvme", "sd"]
-  net_prio:     ["restart", "usb", "sd", "net"]
+boot_sequences:
+  nvme_prio: ["restart", "usb", "sd", "nvme"]
+  sdcard_prio: ["restart", "usb", "nvme", "sd"]
+  net_prio: ["restart", "usb", "sd", "net"]
 
   # Control behavior
 bootmode_reboot: true      # reboot if EEPROM changed

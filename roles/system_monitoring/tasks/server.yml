@@ -1,5 +1,13 @@
 ---
+- name: Check if iperf3 is running
+  ansible.builtin.command: pgrep -x iperf3
+  register: iperf3_running
+  changed_when: false
+  failed_when: false
+
 - name: Start iperf3 server
   ansible.builtin.shell: "nohup iperf3 -s > /dev/null 2>&1 &"
   async: 5
   poll: 0
+  when: iperf3_running.rc != 0
+  changed_when: false
