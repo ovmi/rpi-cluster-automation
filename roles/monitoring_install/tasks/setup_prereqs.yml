@@ -14,3 +14,5 @@
     curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
   args:
     creates: /usr/local/bin/helm
+  changed_when: false
+  failed_when: false

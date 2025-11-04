@@ -21,10 +21,10 @@
     mode: '0755'
 
 - name: Download Docker GPG key
-  ansible.builtin.command: >
-    curl -fsSL {{ docker_repo_base | trim }}/gpg -o /etc/apt/keyrings/docker.asc
-  args:
-    creates: /etc/apt/keyrings/docker.asc
+  ansible.builtin.get_url:
+    url: "{{ docker_repo_base | trim }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
 
 # - name: Download Docker GPG key
 #   ansible.builtin.get_url:
@@ -42,4 +42,5 @@
   ansible.builtin.copy:
     src: /etc/apt/keyrings/docker.asc
     dest: /etc/apt/trusted.gpg.d/docker.asc
+    mode: '0644'
     remote_src: true
