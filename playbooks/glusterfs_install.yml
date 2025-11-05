@@ -4,11 +4,6 @@
   become: true
   gather_facts: true
 
-  vars:
-    gluster_brick_node: "rpi-node3"
-    gluster_volume_name: "{{ gluster_brick_node }}_volume"
-    allow_format: true
-
   roles:
     - glusterfs_install
 

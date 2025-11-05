@@ -4,11 +4,12 @@
 
 - name: Include brick node tasks
   ansible.builtin.import_tasks: brick_node.yml
-  when: inventory_hostname == gluster_brick_node
+  when: inventory_hostname in groups[gluster_bricks_group]
 
 - name: Include control node tasks
   ansible.builtin.import_tasks: control_node.yml
-  when: inventory_hostname in groups['control']
+  run_once: true
+  when: inventory_hostname == groups[gluster_bricks_group][0]
 
 - name: Include mount volume tasks
   ansible.builtin.import_tasks: mount_volume.yml

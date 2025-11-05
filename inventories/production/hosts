@@ -17,6 +17,12 @@ rpi-node3 ansible_connection=ssh ansible_host=192.168.100.13 ansible_user=node3 
 control
 workers
 
+[gluster_bricks]
+rpi-node3
+
+[gluster_control]
+rpi-node0
+
 [all:vars]
 lte_gateway_ip=192.168.225.1
 wired_gateway_ip=192.168.100.1

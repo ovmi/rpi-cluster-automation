@@ -1,0 +1,11 @@
+---
+gluster_volume_name: gv0
+gluster_brick_path: /mnt/glusterfs-brick
+gluster_volume_mountpoint: /mnt/glusterfs-volume
+
+# Host group that contains all brick nodes
+gluster_bricks_group: gluster_bricks
+# Control group (the node(s) allowed to run cluster commands)
+gluster_control_group: gluster_control
+
+allow_format: false

@@ -6,17 +6,10 @@
     group: root
     mode: '0755'
 
-- name: Check if volume is already mounted
-  ansible.builtin.shell: mountpoint -q /mnt/glusterfs-volume
-  register: gluster_volume_mount_check
-  changed_when: false
-  failed_when: false
-
-- name: Mount the GlusterFS volume if not mounted
-  ansible.builtin.mount:
+- name: Mount GlusterFS volume (persistent + idempotent)
+  ansible.posix.mount:
     path: /mnt/glusterfs-volume
     src: "{{ gluster_brick_node }}:/{{ gluster_volume_name }}"
     fstype: glusterfs
     opts: defaults,_netdev
     state: mounted
-  when: gluster_volume_mount_check.rc != 0
