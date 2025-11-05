@@ -6,7 +6,7 @@
 
 - name: Ensure ~/.ssh directory exists
   ansible.builtin.file:
-    path: "~/.ssh"
+    path: "{{ ssh_known_hosts | expanduser | dirname }}"
     state: directory
     mode: '0700'
   run_once: true
@@ -18,11 +18,12 @@
   run_once: true
 
 - name: Generate SSH key pair if not present
-  ansible.builtin.openssh_keypair:
+  community.crypto.openssh_keypair:
     path: "{{ ssh_private_key_path }}"
     type: "{{ ssh_key_type | default('ed25519') }}"
     # size: "{{ ssh_key_bits }}" # only used if type is rsa
     comment: "{{ ssh_key_comment | default('raspi-cluster') }}"
+    mode: '0600'
   when: not ssh_key_stat.stat.exists
   run_once: true
 
@@ -32,10 +33,13 @@
   changed_when: "'updated' in ssh_keygen_cleanup.stdout"
   failed_when: ssh_key_cleanup.rc not in [0,1]
 
-- name: Scan and save host keys
-  ansible.builtin.shell: "ssh-keyscan -H {{ ansible_host | default(inventory_hostname) }} >> {{ ssh_known_hosts | expanduser }}"
-  ignore_errors: true
-  changed_when: false
+- name: Scan and save host key to known_hosts
+  ansible.builtin.known_hosts:
+    path: "{{ ssh_known_hosts | expanduser }}"
+    name: "{{ ansible_host | default(inventory_hostname) }}"
+    state: present
+    hash_host: true
+    key: "{{ lookup('pipe', 'ssh-keyscan -T 5 ' ~ (ansible_host | default(inventory_hostname))) }}"
 
 - name: Push public key with sshpass
   ansible.builtin.shell: >
@@ -49,8 +53,15 @@
     "{{ hostvars[item].ansible_user | default(ansible_user) }}@{{ hostvars[item].ansible_host | default(item) }}"
   args:
     executable: /bin/bash
+  register: ssh_copy_result
+  changed_when: >
+    ssh_copy_result.rc == 0 and
+    ("Number of key(s) added" in (ssh_copy_result.stdout | default('')) or
+     "Identity added" in (ssh_copy_result.stdout | default('')))
+  failed_when: >
+    ssh_copy_result.rc not in [0,1] and
+    "already exist" not in (ssh_copy_result.stdout | default(''))
   when:
     - hostvars[item].ansible_pass is defined
   loop: "{{ groups['cluster'] | default([]) }}"
   notify: Restart SSH service
-  ignore_errors: true
