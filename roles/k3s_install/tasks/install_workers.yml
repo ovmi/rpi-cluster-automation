@@ -12,15 +12,32 @@
     state: present
 
 - name: Get k3s token from control node
-  ansible.builtin.shell: cat /var/lib/rancher/k3s/server/node-token
-  register: k3s_token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
   delegate_to: "{{ groups['control'][0] }}"
+  register: k3s_token_raw
 
-- name: Join the k3s cluster
-  ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | K3S_URL=https://{{ hostvars[groups['control'][0]].ansible_host }}:6443 K3S_TOKEN={{ k3s_token.stdout }} sh -
+- name: Decode k3s token
+  ansible.builtin.set_fact:
+    k3s_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/get-k3s.sh
+    mode: '0755'
+
+- name: Run k3s installer to join cluster
+  ansible.builtin.command: >
+    sh /tmp/get-k3s.sh
+  environment:
+    K3S_URL: "https://{{ hostvars[groups['control'][0]].ansible_host }}:6443"
+    K3S_TOKEN: "{{ k3s_token }}"
   args:
     creates: /usr/local/bin/k3s-agent
+  register: k3s_install
+  changed_when: k3s_install.rc == 0
+  failed_when: k3s_install.rc != 0
 
 - name: Enable and start k3s-agent service
   ansible.builtin.systemd:

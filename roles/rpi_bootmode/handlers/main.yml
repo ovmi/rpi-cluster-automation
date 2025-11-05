@@ -1,0 +1,5 @@
+- name: Apply EEPROM config
+  ansible.builtin.command: rpi-eeprom-config --apply /tmp/bootconf.txt
+  register: eeprom_apply
+  changed_when: "'No changes' not in (eeprom_apply.stdout | default(''))"
+  failed_when: eeprom_apply.rc != 0

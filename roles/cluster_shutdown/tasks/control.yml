@@ -4,7 +4,11 @@
   changed_when: false
 
 - name: Shutdown control node with delay
-  ansible.builtin.command: /sbin/shutdown -h +1 "Shuting down in 1 minute..."
-  async: 0
+  become: true
+  ansible.builtin.shell: /sbin/shutdown -h +1 "Shutting down in 1 minute..." && touch /var/run/shutdown-scheduled
+  args:
+    creates: /var/run/shutdown-scheduled
+  register: shutdown_result
+  failed_when: shutdown_result.rc != 0
+  async: 45
   poll: 0
-  ignore_errors: true
