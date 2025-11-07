@@ -47,12 +47,13 @@
   failed_when: false
   when: inventory_hostname == groups[gluster_bricks_group][0]
 
-- name: Check if the volume is started
-  ansible.builtin.command: "gluster volume status {{ gluster_volume_name }}"
-  register: gluster_volume_status
-  changed_when: false
-  failed_when: false
-  when: inventory_hostname == groups[gluster_bricks_group][0]
+- name: Start the GlusterFS volume if it is not started
+  ansible.builtin.command: "gluster volume start {{ gluster_volume_name }}"
+  register: gluster_start
+  when:
+    - inventory_hostname == groups[gluster_bricks_group][0]
+    - gluster_volume_status.rc != 0
+  changed_when: "'already' not in (gluster_start.stderr | default(''))"
 
 - name: Get GlusterFS volume info
   ansible.builtin.command: "gluster volume info {{ gluster_volume_name }}"
