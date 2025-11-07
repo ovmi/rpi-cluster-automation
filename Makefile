@@ -12,3 +12,9 @@ lint:
 
 ping:
 	ansible all -i $(INVENTORY) -m ping
+
+
+.PHONY: diagrams
+diagrams:
+	mkdir -p docs/media
+	find docs -name "*.mmd" -exec sh -c 'for f; do mmdc -i "$$f" -o "docs/media/$$(basename "$$f" .mmd).png"; done' sh {} +

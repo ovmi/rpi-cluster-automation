@@ -1,0 +1,11 @@
+graph TD
+  A[node0 - Pi 5\nController + NVMe]
+  B[node1 - Pi 5\nAI Node]
+  C[node2 - Pi 4\nFuture Storage]
+  D[node3 - Pi 4\nGluster Brick + LTE]
+  Router --> Switch
+  Switch --> A
+  Switch --> B
+  Switch --> C
+  Switch --> D
+  D -->|Backup WAN| LTE
