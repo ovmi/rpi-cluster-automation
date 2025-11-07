@@ -27,11 +27,20 @@
   ansible.builtin.command: rpi-eeprom-config --apply /tmp/bootconf.txt
   when: boot_order_valid.changed
   register: eeprom_apply
+  changed_when: "'No changes' not in (eeprom_apply.stdout | default(''))"
+  failed_when: eeprom_apply.rc != 0
 
-- name: Reboot (background, no wait)
-  ansible.builtin.shell: "nohup bash -c 'sleep 3; /sbin/reboot' >/dev/null 2>&1 &"
-  async: 0
-  poll: 0
+# - name: Write EEPROM configuration
+#   ansible.builtin.copy:
+#     src: bootconf.txt
+#     dest: /tmp/bootconf.txt
+#   register: boot_order_valid
+#   notify: Apply EEPROM config
+
+- name: Reboot if boot order changed
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    msg: "Reboot triggered because EEPROM boot order changed"
   when: boot_order_valid.changed and bootmode_reboot
   become: true
 
