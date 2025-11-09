@@ -1,122 +1,159 @@
-# Ansible Cluster Automation
+# 🧩 Raspberry Pi Cluster Automation
 
-This repository contains an Ansible-based automation framework for managing a cluster of Raspberry Pi nodes.
+A fully automated infrastructure for a four-node Raspberry Pi cluster that handles
+everything from **NVMe flashing** and **PXE boot configuration** to **K3s
+deployment**, **GlusterFS storage**, and **Prometheus + Grafana monitoring**.
 
-## Ansible Cluster Automation
+---
 
-Automation framework for managing a Raspberry Pi cluster using Ansible roles and playbooks.
+## 📸 Cluster Overview
 
-This repo collects reusable Ansible roles and playbooks to bootstrap, configure and operate a small cluster (k3s, Docker, monitoring, glusterfs, PXE, NVMe provisioning and more).
+![Cluster Diagram](docs/images/cluster_presentation.jpg)
 
-## Quick overview
+This setup combines high-speed NVMe storage, an AI accelerator, distributed SSD
+bricks, and an LTE failover node — all interconnected through a Gigabit Ethernet
+switch and orchestrated by automated Ansible playbooks.
 
-- Project root: repository contains top-level `playbooks/`, `roles/`, and `inventories/`.
-- Work is intended to be run from a control machine with SSH access to target Raspberry Pis.
+---
 
-## Requirements
+## 🧭 1. Introduction
 
-- A Linux/macOS control machine (x86 recommended) with network access to the nodes.
-- Python 3.11+ and Ansible (tested with Ansible 2.10+ / 7.x). Install `ansible-lint` for CI checks.
-- SSH key-based access to each node (default user: `pi`) or configure a different user in inventory/group_vars.
+The goal of this project is to build a **self-provisioning Raspberry Pi cluster**
+capable of:
 
-## Project layout
+- Booting worker nodes directly from images flashed on an NVMe SSD (PXE/NFS).
+- Managing distributed storage through GlusterFS.
+- Running lightweight Kubernetes (K3s) for container workloads.
+- Providing system monitoring and alerting through Prometheus and Grafana.
+- Maintaining automated network routing with LTE failover redundancy.
 
-```
-playbooks/                  # Top-level playbooks (examples below)
-roles/                      # Reusable roles: k3s_install, docker_install, etc.
-inventories/                # Inventory files and group_vars/host_vars/
-Makefile                    # Convenience targets (run, lint, ping)
-README.md
-```
+Automation is achieved using modular Ansible roles that can bring the cluster
+from bare-metal to a fully operational, monitored Kubernetes environment.
 
-## Quick start
+---
 
-1. Ensure your control machine has Ansible and access to the target nodes.
-2. Edit your inventory at `inventories/production/hosts` and variables under `inventories/production/group_vars/`.
-3. Run a playbook using the `Makefile` or `ansible-playbook` directly.
+## ⚙️ 2. Hardware Setup
 
-Run default Makefile target (note: `Makefile` uses `PLAYBOOK` and `INVENTORY` variables):
+| Node | Model | Role / Function | IP Address | Storage | Peripherals |
+|------|--------|----------------|-------------|----------|--------------|
+| **node0** | Raspberry Pi 5 (8 GB) | Control node, PXE/NFS server, NVMe storage | `192.168.100.10` | NVMe SSD (16 partitions A/B for all nodes) | PoE+ HAT w/ fan |
+| **node1** | Raspberry Pi 5 (8 GB) | AI workloads / K3s worker | `192.168.100.11` | NVMe partition (A/B boot via PXE) | Hailo AI accelerator (M.2) |
+| **node2** | Raspberry Pi 4 (8 GB) | GlusterFS brick + K3s worker | `192.168.100.12` | External SSD (USB 3.0) | PoE HAT |
+| **node3** | Raspberry Pi 4 (8 GB) | GlusterFS brick + Network failover (LTE) | `192.168.100.13` | External SSD (USB 3.0) | Sixfab LTE modem (USB), Phat Stack HAT |
 
-```bash
-# runs the configured playbook with the configured inventory
-make run
+**Network Gateway:** `192.168.100.1`  
+**Switch:** Gigabit PoE + Ethernet Switch (5 ports)
 
-# override to run a specific playbook
-make run PLAYBOOK=playbooks/k3s_install.yml
+Power is supplied via **PoE+** on Pi 5s and 5 V USB on Pi 4s.  
+All nodes are on the same LAN subnet, with node3 capable of policy-based routing
+for LTE failover.
 
-# run ansible-lint against the configured playbook
-make lint
+---
 
-# ping all hosts in the inventory
-make ping
-```
+## 🌐 3. Network Topology
 
-You can also call ansible-playbook directly:
-
-```bash
-ansible-playbook -i inventories/production/hosts playbooks/k3s_install.yml
-```
-
-## Available playbooks
-
-The `playbooks/` directory contains the most common automation entry points. Examples included in this repository:
-
-- `k3s_install.yml` — install k3s and join nodes
-- `k3s_uninstall.yml` — remove k3s cluster
-- `docker_install.yml` / `docker_uninstall.yml` — manage Docker
-- `monitoring_install.yml` / `system_monitoring.yml` / `cpu_temp_monitor.yml` — monitoring stack and exporters
-- `glusterfs_install.yml` — glusterfs setup
-- `pxe_boot.yml` — PXE boot infrastructure
-- `nvme_provision.yml` — NVMe preparation and provisioning
-- `network_setup.yml` — basic network configuration for nodes
-- `ssh_setup.yml` — configure SSH users and keys
-- `rpi_bootmode.yml` — set Raspberry Pi bootmode (USB/SD)
-- `cluster_shutdown.yml` / `cluster_reboot.yml` — orderly shutdown / reboot
-- `system_config.yml` — miscellaneous system configuration
-- `switch_control.yml` — control managed switch port power (if supported)
-- `compatibility.yml` — run basic compatibility checks across nodes
-
-This is not an exhaustive list — check `playbooks/` for the complete set.
-
-## Inventories and variables
-
-- Inventory files live under `inventories/production/` by default.
-- Global variables and secrets are stored under `inventories/production/group_vars/` (for example, `all/` and `all/vault.yml`).
-- Per-host variables can be placed in `inventories/production/host_vars/`.
-
-Secrets: if you use Ansible Vault, keep encrypted values in `group_vars/*/vault.yml` and provide the vault password at runtime using `--vault-password-file` or `ANSIBLE_VAULT_PASSWORD_FILE`.
-
-## Roles
-
-Each role in `roles/` follows the standard Ansible role layout (tasks, handlers, templates, files, defaults, vars, meta). Roles are designed to be composable and are referenced from the top-level playbooks.
-
-## Troubleshooting & tips
-
-- Test connectivity first:
-
-```bash
-ansible all -i inventories/production/hosts -m ping
+```mermaid
+flowchart LR
+  GW[Router 192.168.100.1] --> SW[Ethernet Switch]
+  SW --> N0[node0 – Control / NVMe]
+  SW --> N1[node1 – AI Worker]
+  SW --> N2[node2 – Storage]
+  SW --> N3[node3 – Failover LTE]
+  N3 --> LTE[Sixfab LTE Modem]
 ```
 
-- Run a playbook in check (dry-run) mode:
+- **Primary gateway:** via router `192.168.100.1`
+- **Backup gateway:** LTE modem on node3 (`eth1`)
+- **Failover logic:** Policy-based routing (wired = priority 100, LTE = priority 200)
 
-```bash
-ansible-playbook -i inventories/production/hosts playbooks/k3s_install.yml --check
+---
+
+## 🧰 4. Software Architecture
+
+| Layer | Component | Description |
+|-------|------------|-------------|
+| **Provisioning** | `nvme_provision` | Creates partitions, flashes OS images, updates `cmdline.txt` and `fstab`. |
+| **Network Boot** | `pxe_boot` | Configures dnsmasq + TFTP + NFS exports for PXE boot of worker nodes. |
+| **Access Control** | `ssh_config` | Generates SSH keys, pushes them via sshpass, populates known_hosts. |
+| **System Config** | `system_config` | Hostname, hosts file, packages, and dist-upgrade. |
+| **Networking** | `network_setup` | NAT, routing tables, LTE failover on node3. |
+| **Storage** | `glusterfs_install` | Creates distributed volume between node2 and node3. |
+| **Container Runtime** | `docker_install` | Installs Docker CE, adds users to group, enables service. |
+| **Orchestration** | `k3s_install` | Installs K3s control plane and joins workers. |
+| **Monitoring** | `monitoring_install` | Deploys Prometheus + Grafana via Helm. |
+| **Custom Metrics** | `cpu_temp_mon_kube` | Publishes temperature metrics through Node Exporter. |
+| **Maintenance** | `cluster_shutdown` | Sequential shutdown (workers → control). |
+
+---
+
+## 🪜 5. Playbook Execution Order
+
+| Step | Playbook | Description |
+|------|-----------|-------------|
+| 1️⃣ | `nvme_provision.yml` | Partition and prepare NVMe drive on node0. |
+| 2️⃣ | `image_flash.yml` | Flash OS images for each node (A/B partitions). |
+| 3️⃣ | `pxe_boot.yml` | Configure PXE boot server and NFS exports. |
+| 4️⃣ | `ssh_config.yml` | Generate/push SSH keys, update known_hosts. |
+| 5️⃣ | `system_config.yml` | Apply system baseline (hostnames, packages). |
+| 6️⃣ | `network_setup.yml` | Configure routing, NAT, LTE failover. |
+| 7️⃣ | `docker_install.yml` | Install Docker on all nodes. |
+| 8️⃣ | `glusterfs_install.yml` | Setup Gluster volume (node2 + node3). |
+| 9️⃣ | `k3s_install.yml` | Install K3s control + workers. |
+| 🔟 | `monitoring_install.yml` | Deploy Prometheus + Grafana via Helm. |
+| 11️⃣ | `cpu_temp_mon_kube.yml` | Add custom temperature exporter. |
+| 12️⃣ | `cluster_shutdown.yml` | Graceful shutdown sequence. |
+
+---
+
+## 📈 6. Monitoring and Observability
+
+After deployment:
+
+- **Prometheus** scrapes Node Exporter metrics and custom temperature collectors.
+- **Grafana** runs on `node0` accessible via `http://192.168.100.10:3000` (default login `admin` / `admin`).
+
+---
+
+## 🧱 7. Repository Layout
+
+```
+rpi-cluster-automation/
+├── playbooks/
+├── roles/
+└── inventories/
 ```
 
-- Use `ANSIBLE_VERBOSE` or `-v` for more output when debugging.
-- Lint playbooks with `ansible-lint` and follow suggestions from CI (GitHub Actions configured for linting).
+---
 
-## Contributing
+## 🧩 8. Future Enhancements
 
-- Open issues and PRs. Add tests or example inventories where applicable.
-- Keep changes focused to one role/playbook per PR and update role documentation.
-- Run `make lint` and fix warnings before submitting a PR.
+- Integrate **Hailo AI accelerator** workloads in K3s.  
+- Expand **NAS** with dynamic Gluster volume management.  
+- Add **Telegram/MQTT** boot failure alerts.  
+- Implement **tryboot A/B** OS updates.  
 
-## License
+---
 
-See `LICENSE` if present. If not, please contact the repository owner for licensing details.
+## 🧰 9. Development Tools
 
-## Contact / Maintainers
+`ansible-lint`, `yamllint`, `molecule`, `ansible-vault`.
 
-If you need help, open an issue or contact the repository owner.
+---
+
+## 📦 10. Required Collections
+
+```yaml
+collections:
+  - name: community.general
+  - name: ansible.posix
+  - name: kubernetes.core
+  - name: gluster.gluster
+```
+
+---
+
+## 🧑‍💻 Maintainer
+
+**Author:** Ovidiu  
+**Location:** Romania  
+**Last Update:** November 2025  
