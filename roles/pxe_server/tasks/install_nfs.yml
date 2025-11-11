@@ -10,7 +10,7 @@
     owner: root
     group: root
     mode: "0755"
-  loop: [ "node1-root", "node2-root", "node3-root" ]
+  loop: ["node1-root", "node2-root", "node3-root"]
 
 - name: Ensure exports drop-in directory exists
   ansible.builtin.file:

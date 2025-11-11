@@ -2,13 +2,10 @@
   hosts: control
   become: true
   gather_facts: false
-  vars:
-    nfs_root_dir: /srv/nfs
-    tftp_dir: /srv/tftp
   tasks:
     - name: Install NFS server on controller
       ansible.builtin.import_role:
-        name: pxe_boot
+        name: pxe_server
         tasks_from: install_nfs.yml
 
     # - name: Install TFTP server on controller
@@ -18,10 +15,9 @@
 
     - name: Install DNS server on controller
       ansible.builtin.import_role:
-        name: pxe_boot
+        name: pxe_server
         tasks_from: install_dnsmasq.yml
 
   # Set up PXE boot server (NFS, TFTP, DNS) on control node.
   # Example command line to run this playbook:
-  # ansible-playbook -i inventories/production/hosts playbooks/pxe_boot.yml
-
+  # ansible-playbook playbooks/pxe_server.yml -e nvme_nodes=node0,node1 -e nvme_slot=A

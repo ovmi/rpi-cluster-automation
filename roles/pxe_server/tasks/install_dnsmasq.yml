@@ -2,7 +2,7 @@
   ansible.builtin.apt:
     name: dnsmasq
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Ensure dnsmasq drop-in directory exists
   ansible.builtin.file:

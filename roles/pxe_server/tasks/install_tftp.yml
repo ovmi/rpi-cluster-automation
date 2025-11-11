@@ -2,12 +2,12 @@
   ansible.builtin.apt:
     name: tftpd-hpa
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Unmask tftpd-hpa
   ansible.builtin.systemd:
     name: tftpd-hpa
-    masked: no
+    masked: false
 
 - name: Configure tftpd-hpa defaults
   ansible.builtin.copy:
