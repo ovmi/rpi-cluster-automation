@@ -57,6 +57,9 @@ Include this role in your playbook like so:
 - `sshpass` installed on the control machine
 - Python 3.6+ and `ansible-core` 2.10+
 
+# Install required collections
+ansible-galaxy collection install -r collections/requirements.yml
+
 ## 🧪 Tested On
 
 - Raspberry Pi OS (Debian 11)
