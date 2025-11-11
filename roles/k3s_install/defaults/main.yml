@@ -1,0 +1,9 @@
+---
+# Version pins
+kubectl_version: "v1.29.2"
+kubectl_url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/arm64/kubectl"
+# kubectl_checksum: "sha256:<fill-me>"
+
+k3s_installer_url: "https://get.k3s.io"
+kubernetes_client_pip: "kubernetes"
+pip_extra_args: "--break-system-packages"
