@@ -1,5 +1,5 @@
 - name: Ensure NVMe partitioning dependencies are installed
-  package:
+  ansible.builtin.package:
     name:
       - gdisk        # provides sgdisk
       - parted

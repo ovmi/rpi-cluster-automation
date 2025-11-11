@@ -2,8 +2,7 @@
   hosts: cluster
   become: true
   gather_facts: false
-  #serial: 1
+  # serial: 1
 
   roles:
     - cluster_reboot
-    
