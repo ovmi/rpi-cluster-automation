@@ -1,7 +1,7 @@
-- name: Check if Ansible is running in a virtualenv
+- name: Detect if Ansible runs inside a virtualenv
   ansible.builtin.set_fact:
     # ansible_facts.python.virtualenv is not always defined:
-    is_ansible_venv: "{{ '/.venv/' in ansible_playbook_python }}"
+    is_ansible_venv: "{{ ansible_playbook_python is search('/.venv/') }}"
 
 - name: Determine if Ansible version is >= 2.10
   ansible.builtin.set_fact:
@@ -16,21 +16,54 @@
         lookup('env', 'HOME') ~ '/.ansible/collections'
       }}
 
+- name: Show resolved Ansible collections path
+  ansible.builtin.debug:
+    msg: "Collections path = {{ ansible_collections_path }}"
+
+# Check if required collections are installed
 - name: Check if community.crypto is installed
-  ansible.builtin.shell: |
-    ansible-galaxy collection list --collections-path {{ ansible_collections_path }} | grep -q community.crypto
-  register: crypto_check
-  ignore_errors: true
+  ansible.builtin.command: >
+    ansible-galaxy collection list --collections-path {{ ansible_collections_path }}
+  register: crypto_list
   changed_when: false
+  failed_when: false
   when: is_ansible_2_10_plus
 
-- name: Ensure community.crypto collection is installed
-  ansible.builtin.ansible_galaxy:
-    command: collection
-    name: community.crypto
-    state: present
-  when: crypto_check.rc != 0
+- name: Mark community.crypto presence
+  ansible.builtin.set_fact:
+    community_crypto_installed: "{{ 'community.crypto' in crypto_list.stdout }}"
+  when: is_ansible_2_10_plus
 
+- name: Check kubernetes.core availability
+  ansible.builtin.command: >
+    ansible-galaxy collection list --collections-path {{ ansible_collections_path }}
+  register: kubernetes_list
+  changed_when: false
+  failed_when: false
+  when: is_ansible_2_10_plus
+
+- name: Mark kubernetes.core presence
+  ansible.builtin.set_fact:
+    kubernetes_core_installed: "{{ 'kubernetes.core' in kubernetes_list.stdout }}"
+  when: is_ansible_2_10_plus
+
+- name: Fail if community.crypto is missing
+  ansible.builtin.fail:
+    msg: |
+      Missing required collection: community.crypto
+      Install it using:
+        ansible-galaxy collection install -r collections/requirements.yml
+  when: is_ansible_2_10_plus and not community_crypto_installed
+
+- name: Fail if kubernetes.core is missing
+  ansible.builtin.fail:
+    msg: |
+      Missing required collection: kubernetes.core
+      Install it using:
+        ansible-galaxy collection install -r collections/requirements.yml
+  when: is_ansible_2_10_plus and not kubernetes_core_installed
+
+# Set compatible module names
 - name: Set compatible module names
   ansible.builtin.set_fact:
     openssh_keypair_module: >-
@@ -39,50 +72,3 @@
         if is_ansible_2_10_plus else
         'ansible.builtin.openssh_keypair'
       }}
-
-# - name: Check if kubernetes.core is installed
-#   shell: |
-#     ansible-galaxy collection list --collections-path {{ ansible_collections_path }} | grep -q kubernetes.core
-#   register: kubernetes_check
-#   ignore_errors: true
-#   changed_when: false
-#   when: is_ansible_2_10_plus
-
-# - name: Install kubernetes.core if not present
-#   shell: ansible-galaxy collection install kubernetes.core
-#   when: kubernetes_check.rc != 0
-
-- name: Set correct collections base path
-  ansible.builtin.set_fact:
-    ansible_collections_base: >-
-      {{
-        '.venv/lib/python' ~ ansible_facts.python.version.major ~ '.' ~ ansible_facts.python.version.minor ~ '/site-packages'
-        if '/.venv/' in ansible_playbook_python else
-        lookup('env', 'HOME') ~ '/.ansible/collections'
-      }}
-
-- name: Check if kubernetes.core is installed
-  ansible.builtin.shell: >
-    ansible-galaxy collection list --collections-path {{ ansible_collections_base }} | grep -q kubernetes.core
-  register: kubernetes_check
-  ignore_errors: true
-  changed_when: false
-  when: is_ansible_2_10_plus
-
-- name: Show ansible_collections_base
-  ansible.builtin.debug:
-    msg: "ansible_collections_base: {{ ansible_collections_base }}"
-  when: ansible_collections_base is defined
-
-- name: Set fallback value if kubernetes_check is undefined
-  ansible.builtin.set_fact:
-    kubernetes_check:
-      rc: 1
-  when: kubernetes_check is not defined and is_ansible_2_10_plus
-
-- name: Ensure kubernetes.core collection is installed
-  ansible.builtin.ansible_galaxy:
-    command: collection
-    name: kubernetes.core
-    state: present
-  when: is_ansible_2_10_plus and kubernetes_check.rc != 0
