@@ -13,7 +13,6 @@
 
 - name: Export current EEPROM config
   ansible.builtin.command: rpi-eeprom-config --out /tmp/bootconf.txt
-  register: eeprom_config
   changed_when: false
 
 - name: Ensure BOOT_ORDER={{ boot_order }}
