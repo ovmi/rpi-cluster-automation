@@ -1,0 +1,17 @@
+- name: Check parameters
+  ansible.builtin.import_tasks: check_params.yml
+
+- name: Install NFS server on controller
+  ansible.builtin.import_tasks: nfs_install.yml
+
+- name: Configure NFS server on controller
+  ansible.builtin.import_tasks: nfs_config.yml
+
+# - name: Install TFTP server on controller
+#   ansible.builtin.import_tasks: tftp_install.yml
+
+- name: Install DNS server on controller
+  ansible.builtin.import_role: dnsmasq_install.yml
+
+- name: Configure TFTP server on controller
+  ansible.builtin.import_tasks: tfpt_config.yml

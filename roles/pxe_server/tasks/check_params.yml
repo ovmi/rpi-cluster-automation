@@ -1,42 +1,63 @@
+- name: Ensure base directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ nfs_base }}"
+    - "{{ tftp_base }}"
+
 - name: Validate nvme_slots parameter
   ansible.builtin.assert:
     that:
       - (nvme_slot) in ['A','B']
     fail_msg: "nvme_slot must be 'A' or 'B' (got: {{ nvme_slot }})"
 
-- name: Collect all logical nodes from nvme_partitions
+- name: Resolve node list from nvme_nodes (string or list)
   ansible.builtin.set_fact:
-    _all_nodes: "{{ nvme_partitions.keys() | list }}"
+    _nvme_nodes: >-
+      {%- if nvme_nodes is string and nvme_nodes|length > 0 -%}
+        {{ nvme_nodes.split(',') | map('trim') | list }}
+      {%- elif nvme_nodes is sequence and nvme_nodes|length > 0 -%}
+        {{ nvme_nodes }}
+      {%- else -%}
+        {{ nvme_layout.keys() | list }}
+      {%- endif -%}
 
-- name: Normalize nvme_nodes (raw)
-  ansible.builtin.set_fact:
-    _nodes_raw: "{{ (nvme_nodes | default('') | string) | regex_replace('\\s+', '') }}"
-
-- name: Normalize nvme_nodes (list)
-  ansible.builtin.set_fact:
-    _nodes: "{{ (_nodes_raw | length > 0) | ternary((_nodes_raw | regex_findall('[^,]+') | list), []) }}"
-
-- name: Compute selected nodes
-  ansible.builtin.set_fact:
-    _selected_nodes: "{{ (_nodes | length > 0) | ternary(_nodes, _all_nodes) }}"
-
-- name: Validate selected nodes exist in nvme_partitions
+- name: Validate requested nodes exist in nvme_layout
   ansible.builtin.assert:
     that:
-      - _selected_nodes | length > 0
-      - (_selected_nodes | difference(_all_nodes)) | length == 0
-    fail_msg: >-
-      Some nvme_nodes are unknown: {{ (_selected_nodes | difference(_all_nodes)) | join(', ') }}.
-      Known: {{ _all_nodes | join(', ') }}
+      - item in nvme_layout
+    fail_msg: "Node '{{ item }}' not found in nvme_layout. Update defaults/main.yml."
+  loop: "{{ _nvme_nodes }}"
 
-- name: Ensure images exist for selected nodes
-  ansible.builtin.assert:
-    that:
-      - (_selected_nodes | map('extract', images) | list) | select('defined') | list | length == _selected_nodes | length
-    fail_msg: >-
-      'images' must include every selected node. Missing for: {{
-        _selected_nodes | reject('in', images.keys() | list) | list | join(', ') }}
-
-- name: Compute node/slot targets (single slot assumed validated elsewhere)
+- name: Build device mapping for selected nodes/slot
   ansible.builtin.set_fact:
-    _targets: "{{ _selected_nodes | product([nvme_slot]) | list }}"
+    _node_devmap: >-
+      {{
+        dict(_nvme_nodes | map('community.general.dict_kv', 'key', 'value') | list)
+        | combine( dict(_nvme_nodes | list | map('extract', nvme_layout) | list) )
+      }}
+  vars:
+    # community.general.dict_kv isn’t strictly needed; we keep logic simple below.
+    dummy: null
+
+- name: Produce concrete device list (boot_dev, root_dev)
+  ansible.builtin.set_fact:
+    nvme_selected:
+      "{{ (nvme_selected | default([])) + [
+            {
+              'node': item,
+              'boot_part': nvme_layout[item][_slot].boot,
+              'root_part': nvme_layout[item][_slot].root,
+              'boot_dev': nvme_device ~ 'p' ~ nvme_layout[item][_slot].boot,
+              'root_dev': nvme_device ~ 'p' ~ nvme_layout[item][_slot].root,
+              'boot_mnt': tftp_base ~ '/' ~ item,
+              'root_mnt': nfs_base ~ '/' ~ item
+            }
+          ] }}"
+  loop: "{{ _nvme_nodes }}"
+
+- name: Show planned mounts (debug)
+  ansible.builtin.debug:
+    var: nvme_selected

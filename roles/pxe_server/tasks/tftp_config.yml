@@ -1,0 +1,26 @@
+- name: Create per-node TFTP (bootfs) mount points
+  ansible.builtin.file:
+    path: "{{ item.boot_mnt }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ nvme_selected }}"
+
+- name: Ensure bootfs partition exists
+  ansible.builtin.command: "lsblk -no NAME {{ item.boot_dev }}"
+  register: _check_boot
+  changed_when: false
+  failed_when: _check_boot.rc != 0
+  loop: "{{ nvme_selected }}"
+  loop_control:
+    label: "{{ item.node }} -> {{ item.boot_dev }}"
+
+- name: Mount per-node bootfs under TFTP base
+  ansible.builtin.mount:
+    path: "{{ item.boot_mnt }}"
+    src: "{{ item.boot_dev }}"
+    fstype: "{{ bootfs_fstype }}"
+    opts: "{{ bootfs_opts }}"
+    state: mounted
+  loop: "{{ nvme_selected }}"
+  loop_control:
+    label: "{{ item.node }} -> {{ item.boot_mnt }}"

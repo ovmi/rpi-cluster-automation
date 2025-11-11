@@ -2,21 +2,9 @@
   hosts: control
   become: true
   gather_facts: false
-  tasks:
-    - name: Install NFS server on controller
-      ansible.builtin.import_role:
-        name: pxe_server
-        tasks_from: install_nfs.yml
 
-    # - name: Install TFTP server on controller
-    #   import_role:
-    #     name: pxe_boot
-    #     tasks_from: install_tftp.yml
-
-    - name: Install DNS server on controller
-      ansible.builtin.import_role:
-        name: pxe_server
-        tasks_from: install_dnsmasq.yml
+  roles:
+    - pxe_server
 
   # Set up PXE boot server (NFS, TFTP, DNS) on control node.
   # Example command line to run this playbook:

@@ -1,0 +1,26 @@
+- name: Create per-node NFS mount points
+  ansible.builtin.file:
+    path: "{{ item.root_mnt }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ nvme_selected }}"
+
+- name: Ensure rootfs partition exists
+  ansible.builtin.command: "lsblk -no NAME {{ item.root_dev }}"
+  register: _check_root
+  changed_when: false
+  failed_when: _check_root.rc != 0
+  loop: "{{ nvme_selected }}"
+  loop_control:
+    label: "{{ item.node }} -> {{ item.root_dev }}"
+
+- name: Mount per-node rootfs under NFS base
+  ansible.builtin.mount:
+    path: "{{ item.root_mnt }}"
+    src: "{{ item.root_dev }}"
+    fstype: "{{ rootfs_fstype }}"
+    opts: "{{ rootfs_opts }}"
+    state: mounted
+  loop: "{{ nvme_selected }}"
+  loop_control:
+    label: "{{ item.node }} -> {{ item.root_mnt }}"
