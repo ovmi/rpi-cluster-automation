@@ -1,0 +1,18 @@
+---
+# Normalize and validate slot (A/B)
+# CLI: -e slot=A
+
+- name: Normalize slot
+  ansible.builtin.set_fact:
+    slot_param: "{{ (slot | default('A') | string) | upper }}"
+
+- name: Validate slot
+  ansible.builtin.assert:
+    that:
+      - slot_param in ['A','B']
+    fail_msg: "Invalid slot={{ slot }}. Valid values: A or B."
+
+- name: Show selected slot
+  ansible.builtin.debug:
+    msg: "Selected slot: {{ slot_param }}"
+  when: debug | default(false)

@@ -1,0 +1,28 @@
+---
+# Normalize and validate nodes parameter (string or list)
+# CLI: -e nodes=node0,node1 or -e nodes="[ 'node0', 'node1' ]"
+
+- name: Normalize nodes list
+  ansible.builtin.set_fact:
+    nodes_param: >-
+      {%- if nodes is string and (nodes | length) > 0 -%}
+        {{ nodes.split(',') | map('trim') | list }}
+      {%- elif nodes is sequence and (nodes | length) > 0 -%}
+        {{ nodes }}
+      {%- else -%}
+        {{ nvme_layout.keys() | list }}
+      {%- endif -%}
+
+- name: Validate nodes exist in nvme_layout
+  ansible.builtin.assert:
+    that:
+      - item in nvme_layout
+    fail_msg: "Node '{{ item }}' is not defined in nvme_layout"
+  loop: "{{ nodes_param }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: Show selected nodes
+  ansible.builtin.debug:
+    msg: "Selected nodes: {{ nodes_param }}"
+  when: debug | default(false)
