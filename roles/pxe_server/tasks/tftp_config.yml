@@ -2,15 +2,17 @@
   ansible.builtin.file:
     path: "{{ item.boot_mnt }}"
     state: directory
+    owner: root
+    group: root
     mode: "0755"
-  loop: "{{ nvme_selected }}"
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"
 
 - name: Ensure bootfs partition exists
   ansible.builtin.command: "lsblk -no NAME {{ item.boot_dev }}"
-  register: _check_boot
+  register: check_boot
   changed_when: false
-  failed_when: _check_boot.rc != 0
-  loop: "{{ nvme_selected }}"
+  failed_when: check_boot.rc != 0
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"
   loop_control:
     label: "{{ item.node }} -> {{ item.boot_dev }}"
 
@@ -21,6 +23,11 @@
     fstype: "{{ bootfs_fstype }}"
     opts: "{{ bootfs_opts }}"
     state: mounted
-  loop: "{{ nvme_selected }}"
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"
   loop_control:
     label: "{{ item.node }} -> {{ item.boot_mnt }}"
+
+- name: Debug filtered list
+  ansible.builtin.debug:
+    msg: "Mount for {{ item.node }} -> {{ item.root_mnt }}"
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"

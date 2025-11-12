@@ -1,18 +1,20 @@
-- name: Create per-node NFS mount points
+- name: Ensure per-node NFS mount points
   ansible.builtin.file:
     path: "{{ item.root_mnt }}"
     state: directory
+    owner: root
+    group: root
     mode: "0755"
-  loop: "{{ nvme_selected }}"
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"
 
 - name: Ensure rootfs partition exists
   ansible.builtin.command: "lsblk -no NAME {{ item.root_dev }}"
-  register: _check_root
+  register: check_root
   changed_when: false
-  failed_when: _check_root.rc != 0
-  loop: "{{ nvme_selected }}"
+  failed_when: check_root.rc != 0
+  loop: "{{ part_list }}"
   loop_control:
-    label: "{{ item.node }} -> {{ item.root_dev }}"
+    label: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"
 
 - name: Mount per-node rootfs under NFS base
   ansible.posix.mount:
@@ -21,6 +23,11 @@
     fstype: "{{ rootfs_fstype }}"
     opts: "{{ rootfs_opts }}"
     state: mounted
-  loop: "{{ nvme_selected }}"
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"
   loop_control:
     label: "{{ item.node }} -> {{ item.root_mnt }}"
+
+- name: Debug filtered list
+  ansible.builtin.debug:
+    msg: "Mount for {{ item.node }} -> {{ item.root_mnt }}"
+  loop: "{{ part_list | rejectattr('node', 'equalto', 'node0') | list }}"

@@ -1,4 +1,4 @@
 # cluster NVMe-backed roots
-{{ nfs_root_dir }}/node1-root *(rw,sync,no_subtree_check,no_root_squash)
-{{ nfs_root_dir }}/node2-root *(rw,sync,no_subtree_check,no_root_squash)
-{{ nfs_root_dir }}/node3-root *(rw,sync,no_subtree_check,no_root_squash)
+{% for node in nodes_list | reject('equalto', 'node0') %}
+{{ nfs_root_dir }}/{{ node }} *(rw,sync,no_subtree_check,no_root_squash)
+{% endfor %}

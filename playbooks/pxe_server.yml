@@ -1,3 +1,4 @@
+---
 - name: Install PXE server on controller
   hosts: control
   become: true
