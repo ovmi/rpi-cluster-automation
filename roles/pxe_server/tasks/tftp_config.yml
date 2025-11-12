@@ -15,7 +15,7 @@
     label: "{{ item.node }} -> {{ item.boot_dev }}"
 
 - name: Mount per-node bootfs under TFTP base
-  ansible.builtin.mount:
+  ansible.posix.mount:
     path: "{{ item.boot_mnt }}"
     src: "{{ item.boot_dev }}"
     fstype: "{{ bootfs_fstype }}"

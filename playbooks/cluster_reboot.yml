@@ -2,7 +2,11 @@
   hosts: cluster
   become: true
   gather_facts: false
-  # serial: 1
 
   roles:
     - cluster_reboot
+
+  # Reboot cluster nodes.
+  # Example command line to run this playbook:
+  # ansible-playbook playbooks/cluster_reboot.yml
+  # TODO: add parameter -e nodes=node0,node1

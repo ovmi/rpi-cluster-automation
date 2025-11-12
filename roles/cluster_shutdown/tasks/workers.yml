@@ -6,7 +6,7 @@
 - name: Shutdown worker nodes
   ansible.builtin.command: /sbin/shutdown -h now
   become: true
-  async: 0
+  async: 1
   poll: 0
   changed_when: true
   failed_when: false

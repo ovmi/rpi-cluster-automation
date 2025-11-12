@@ -9,6 +9,7 @@
   args:
     creates: /var/run/shutdown-scheduled
   register: shutdown_result
-  failed_when: shutdown_result.rc != 0
   async: 45
   poll: 0
+  changed_when: true
+  failed_when: false
