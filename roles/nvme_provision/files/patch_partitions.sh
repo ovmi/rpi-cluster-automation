@@ -86,12 +86,12 @@ while [[ $# -gt 0 ]]; do
 		-s|--slot)  SLOT="$2"; shift 2 ;;
 		-m|--mode)  MODE="$2"; shift 2 ;;
 		-b|--boot)  BOOT="$2"; shift 2 ;;
-        -r|--root)  ROOT="$2"; shift 2 ;;
-        --nfs-server) NFS_SERVER="${2:-}"; shift 2;;
-        --nfs-base)   NFS_EXPORT_BASE="${2:-}"; shift 2;;
-        --password-hash) PASS_HASH="${2:-}"; shift 2;;
-        --extra-groups)  EXTRA_GROUPS="${2:-}"; shift 2;;
-        --sudo-nopasswd) SUDO_NOPASSWD="${2:-1}"; shift 2;;
+    -r|--root)  ROOT="$2"; shift 2 ;;
+    --nfs-server) NFS_SERVER="${2:-}"; shift 2;;
+    --nfs-base)   NFS_EXPORT_BASE="${2:-}"; shift 2;;
+    --password-hash) PASS_HASH="${2:-}"; shift 2;;
+    --extra-groups)  EXTRA_GROUPS="${2:-}"; shift 2;;
+    --sudo-nopasswd) SUDO_NOPASSWD="${2:-1}"; shift 2;;
 		-h|--help) usage ;;
 		*) log ERROR "Unknown arg: $1"; usage ;;
 	esac
@@ -138,6 +138,9 @@ patch_bootfs() {
     else
       sed -i -E "s|root=[^ ]*|root=/dev/nfs nfsroot=${NFS_SERVER}:${NFS_PATH},vers=3 ip=dhcp|" "$TMP_MOUNT/cmdline.txt"
     fi
+
+    # Replace if "console=serial0" with "ttyAMA0"
+    sed -i -E 's/(console=)[^,]+/\1ttyAMA0/' "$TMP_MOUNT/cmdline.txt"
   else
     touch "$TMP_MOUNT/cmdline.txt"
     if [[ $MODE == "local" ]]; then
@@ -146,9 +149,6 @@ patch_bootfs() {
       echo "console=ttyAMA0,115200 console=tty1 root=/dev/nfs nfsroot=${NFS_SERVER}:${NFS_PATH},vers=3 rw ip=dhcp rootfstype=ext4 rootwait" > "$TMP_MOUNT/cmdline.txt"
     fi
   fi
-
-  # Replace if "console=serial0" with "ttyAMA0"
-  sed -i -E 's/(console=)[^,]+/\1ttyAMA0/' "$TMP_MOUNT/cmdline.txt"
 
   # Set the ownership of cmdline.txt to the new user
   #chroot "$TMP_MOUNT" chown -R "$NEW_USER:$NEW_USER" "$TMP_MOUNT/cmdline.txt"

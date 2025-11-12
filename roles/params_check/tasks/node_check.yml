@@ -1,7 +1,4 @@
 ---
-# Normalize and validate nodes parameter (string or list)
-# CLI: -e nodes=node0,node1 or -e nodes="[ 'node0', 'node1' ]"
-
 - name: Normalize nodes list
   ansible.builtin.set_fact:
     nodes_list: >-

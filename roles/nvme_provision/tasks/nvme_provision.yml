@@ -32,10 +32,6 @@
   changed_when: provision_result.rc == 0
   become: true
 
-- ansible.builtin.debug:
-    msg: "Flashing {{ item }} (slot {{ slot_param }}) with {{ images[item] }}"
-  loop: "{{ nodes_list }}"
-
 - name: Patch bootfs/rootfs for node modes
   ansible.builtin.command: >
     /usr/local/sbin/patch_partitions.sh
