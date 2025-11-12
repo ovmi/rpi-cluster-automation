@@ -1,3 +1,4 @@
+---
 - name: Shutdown entire cluster safely
   hosts: cluster
   become: true

@@ -10,7 +10,6 @@
                                         #          usb_prio: '^/dev/sd[a-z]'
                                         #          net_prio: '^(nfs:|nbd:|overlay:)'
   tasks:
-    tasks:
     - name: Check and validate the CLI parameters
       ansible.builtin.import_role:
         name: rpi_bootmode

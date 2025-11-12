@@ -1,3 +1,4 @@
+---
 - name: Reboot every node from the cluster
   hosts: cluster
   become: true

@@ -2,8 +2,6 @@
 ansible_python_interpreter: /usr/bin/python3
 
 nvme_device: "/dev/nvme0n1"   # NVMe device that holds all per-node partitions
-nvme_nodes: []                # [] means “all nodes in nvme_partitions”
-nvme_slot: "a"                # valid values: "A", "B"
 
 nvme_map:                     # mapping of logical nodes to physical NVMe devices
   node0:

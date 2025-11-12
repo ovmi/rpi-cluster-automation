@@ -10,3 +10,9 @@
 
   roles:
     - switch_control
+
+  # Control switch ports (enable/disable PoE, configure ports, etc.).
+  # Example command to enable PoE on port 3:
+  # ansible-playbook playbooks/switch_control.yml -e poe_action=enable
+  # Example command to configure the switch:
+  # ansible-playbook playbooks/switch_control.yml -e configure_switch=true

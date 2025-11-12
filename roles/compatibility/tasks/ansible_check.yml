@@ -1,20 +1,29 @@
 - name: Detect if Ansible runs inside a virtualenv
   ansible.builtin.set_fact:
-    # ansible_facts.python.virtualenv is not always defined:
     is_ansible_venv: "{{ ansible_playbook_python is search('/.venv/') }}"
 
 - name: Determine if Ansible version is >= 2.10
   ansible.builtin.set_fact:
     is_ansible_2_10_plus: "{{ ansible_version.full is version('2.10', '>=') }}"
 
+- name: Show Ansible version
+  ansible.builtin.debug:
+    msg: "Ansible version = {{ ansible_version.full }}"
+
 - name: Set correct collections path based on environment
   ansible.builtin.set_fact:
     ansible_collections_path: >-
-      {{
-        '.venv/lib/python' ~ ansible_facts.python.version.major ~ '.' ~ ansible_facts.python.version.minor ~ '/site-packages/ansible/collections'
-        if is_ansible_venv else
-        lookup('env', 'HOME') ~ '/.ansible/collections'
-      }}
+      {%- if ansible_playbook_python is search('/\\.venv/') -%}
+      {{ (ansible_playbook_python | regex_replace('^(.*/\\.venv).*', '\\1')) ~
+         '/lib/python' ~ ansible_facts.python.version.major ~ '.' ~ ansible_facts.python.version.minor ~
+         '/site-packages/ansible/collections' }}
+      {%- else -%}
+      {{ lookup('env', 'HOME') ~ '/.ansible/collections' }}
+      {%- endif -%}
+
+- name: Ensure ANSIBLE_COLLECTIONS_PATHS env is set (for 2.14+)
+  ansible.builtin.set_fact:
+    ansible_env: "{{ ansible_env | default({}) | combine({'ANSIBLE_COLLECTIONS_PATHS': ansible_collections_path}) }}"
 
 - name: Show resolved Ansible collections path
   ansible.builtin.debug:
