@@ -20,16 +20,16 @@
     - patch_partitions.sh
 
 - name: Flash images to NVMe partitions
-  loop: "{{ _targets }}"
-  loop_control: { loop_var: target_node }
+  loop: "{{ nodes_list }}"
+  loop_control: { loop_var: node_entry }
   vars:
-    node_key: "{{ target_node[0] }}"
-    slot: "{{ target_node[1] }}"
+    node: "{{ node_entry[0] }}"
+    slot: "{{ node_entry[1] }}"
   ansible.builtin.command: >
     /usr/local/sbin/nvme_provision.sh
-    --node "{{ node_key }}"
-    --slot "{{ slot | lower }}"
-    --image "{{ images[node_key] }}"
+    --node "{{ node }}"
+    --slot "{{ slot }}"
+    --image "{{ images[node] }}"
     --cache "{{ image_cache_dir }}"
     --device "{{ nvme_device }}"
   register: provision_result
@@ -37,17 +37,17 @@
   become: true
 
 - name: Patch bootfs/rootfs for node modes
-  loop: "{{ _targets }}"
-  loop_control: { loop_var: target_node }
+  loop: "{{ nodes_list }}"
+  loop_control: { loop_var: node_entry }
   vars:
-    node_key: "{{ target_node[0] }}"
-    slot: "{{ target_node[1] }}"
-    parts: "{{ nvme_partitions[node_key][slot] }}"
-    mode: "{{ 'local' if node_key == 'node0' else 'nfs' }}"
+    node: "{{ node_entry[0] }}"
+    slot: "{{ node_entry[1] }}"
+    parts: "{{ nvme_partitions[node][slot] }}"
+    mode: "{{ 'local' if node == 'node0' else 'nfs' }}"
   ansible.builtin.command: >
     /usr/local/sbin/patch_partitions.sh
-    --node "{{ node_key }}"
-    --slot "{{ slot | lower }}"
+    --node "{{ node }}"
+    --slot "{{ slot }}"
     --mode "{{ mode }}"
     --boot "{{ nvme_device }}p{{ parts.boot }}"
     --root "{{ nvme_device }}p{{ parts.root }}"

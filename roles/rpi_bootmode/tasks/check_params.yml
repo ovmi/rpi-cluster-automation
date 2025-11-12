@@ -6,4 +6,4 @@
 - name: Check parameters for NVMe slot
   ansible.builtin.import_role:
     name: params_check
-    tasks_from: slot_check.yml
+    tasks_from: bootmode_check.yml

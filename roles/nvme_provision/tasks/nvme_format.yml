@@ -17,7 +17,7 @@
   ansible.builtin.command: >
     /usr/local/sbin/nvme_format.sh
     --device {{ nvme_device }}
-    --format {{ nvme_format }}
+    --format {{ 'yes' if nvme_format | bool else 'no' }}
   register: format
   changed_when: format.rc == 0
   ignore_errors: true

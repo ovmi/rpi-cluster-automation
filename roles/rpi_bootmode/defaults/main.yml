@@ -1,4 +1,4 @@
-# Docmentation: https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-boot-modes
+# Documentation: https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-boot-modes
 
 boot_modes:
   sd: "1"   # SD card boot

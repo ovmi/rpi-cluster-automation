@@ -4,17 +4,7 @@
   become: true
   gather_facts: false
   vars:
-    nvme_device: /dev/nvme0n1
-    image_cache_dir: /mnt/downloads/os_images
-
-    # Limit which logical nodes to touch (empty = all in nvme_partitions var)
-    nvme_nodes: "node0"
-
-    # On which slot to operate (A/B).
-    nvme_slot: "A"
-
-    # Images map used to flash nodes (must include every selected node)
-    images:
+    images:           # Images map used to flash nodes
       node0: "https://old-releases.ubuntu.com/releases/24.04/ubuntu-24.04-preinstalled-server-arm64+raspi.img.xz"
       node1: "https://downloads.raspberrypi.com/raspios_full_arm64/images/raspios_full_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64-full.img.xz"
 
@@ -22,4 +12,4 @@
     - nvme_provision
 
   # Example command line to run this playbook:
-  # ansible-playbook playbooks/nvme_provision.yml -e nvme_nodes=node0,node1 -e nvme_slot=A -e nvme_format=yes
+  # ansible-playbook playbooks/nvme_provision.yml -e nodes=node0,node1 -e slot=a -e nvme_format=true

@@ -8,4 +8,4 @@
 
   # Set up PXE boot server (NFS, TFTP, DNS) on control node.
   # Example command line to run this playbook:
-  # ansible-playbook playbooks/pxe_server.yml -e nvme_nodes=node0,node1 -e nvme_slot=A
+  # ansible-playbook playbooks/pxe_server.yml -e nodes=node0,node1 -e slot=a

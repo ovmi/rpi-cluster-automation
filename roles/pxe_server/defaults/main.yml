@@ -3,26 +3,7 @@ pxe_interface: eth0
 pxe_proxy_network: "192.168.100.0"
 pxe_subnet_mask: "255.255.255.0"
 
-
 pxe_nfs_host: "node0"         # control node on whitch nfs/tftp mounts are performed
-
-nvme_device: "/dev/nvme0n1"   # NVMe device that holds all per-node partitions
-nvme_nodes: []
-nvme_slot: "A"
-
-nvme_layout:
-  node0:
-    A: { boot: 1, root: 2 }
-    B: { boot: 3, root: 4 }
-  node1:
-    A: { boot: 5, root: 6 }
-    B: { boot: 7, root: 8 }
-  node2:
-    A: { boot: 9, root: 10 }
-    B: { boot: 11, root: 12 }
-  node3:
-    A: { boot: 13, root: 14 }
-    B: { boot: 15, root: 16 }
 
 nfs_base: "/srv/nfs"          # NFS base mount point
 tftp_base: "/srv/tftp"        # TFTP base mount point
@@ -32,6 +13,8 @@ rootfs_fstype: "ext4"         # ROOT partition filesystem
 
 bootfs_opts: "defaults"
 rootfs_opts: "defaults"
+
+part_list: []                 # List of NVMe partitions based on selected nodes and active slots
 
 # TFTP configuration
 tftp_dir: /srv/tftp           # TFTP base mount point

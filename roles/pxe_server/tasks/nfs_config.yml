@@ -15,7 +15,7 @@
     label: "{{ item.node }} -> {{ item.root_dev }}"
 
 - name: Mount per-node rootfs under NFS base
-  ansible.builtin.mount:
+  ansible.posix.mount:
     path: "{{ item.root_mnt }}"
     src: "{{ item.root_dev }}"
     fstype: "{{ rootfs_fstype }}"

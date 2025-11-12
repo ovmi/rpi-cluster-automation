@@ -11,7 +11,7 @@
 #   ansible.builtin.import_tasks: tftp_install.yml
 
 - name: Install DNS server on controller
-  ansible.builtin.import_role: dnsmasq_install.yml
+  ansible.builtin.import_tasks: dnsmasq_install.yml
 
 - name: Configure TFTP server on controller
-  ansible.builtin.import_tasks: tfpt_config.yml
+  ansible.builtin.import_tasks: tftp_config.yml

@@ -7,57 +7,31 @@
     - "{{ nfs_base }}"
     - "{{ tftp_base }}"
 
-- name: Validate nvme_slots parameter
-  ansible.builtin.assert:
-    that:
-      - (nvme_slot) in ['A','B']
-    fail_msg: "nvme_slot must be 'A' or 'B' (got: {{ nvme_slot }})"
+- name: Check parameters for valid nodes
+  ansible.builtin.import_role:
+    name: params_check
+    tasks_from: node_check.yml
 
-- name: Resolve node list from nvme_nodes (string or list)
+- name: Check parameters for NVMe slot
+  ansible.builtin.import_role:
+    name: params_check
+    tasks_from: slot_check.yml
+
+- name: Build part_list map
   ansible.builtin.set_fact:
-    _nvme_nodes: >-
-      {%- if nvme_nodes is string and nvme_nodes|length > 0 -%}
-        {{ nvme_nodes.split(',') | map('trim') | list }}
-      {%- elif nvme_nodes is sequence and nvme_nodes|length > 0 -%}
-        {{ nvme_nodes }}
-      {%- else -%}
-        {{ nvme_layout.keys() | list }}
-      {%- endif -%}
+    part_list: "{{ part_list + [ {
+      'node': item,
+      'boot_part': nvme_map[item][slot_param].boot,
+      'root_part': nvme_map[item][slot_param].root,
+      'boot_dev': nvme_device ~ 'p' ~ nvme_map[item][slot_param].boot,
+      'root_dev': nvme_device ~ 'p' ~ nvme_map[item][slot_param].root,
+      'boot_mnt': tftp_base ~ '/' ~ item,
+      'root_mnt': nfs_base ~ '/' ~ item } ] }}"
+  loop: "{{ nodes_list }}"
+  loop_control:
+    label: "{{ item }}"
 
-- name: Validate requested nodes exist in nvme_layout
-  ansible.builtin.assert:
-    that:
-      - item in nvme_layout
-    fail_msg: "Node '{{ item }}' not found in nvme_layout. Update defaults/main.yml."
-  loop: "{{ _nvme_nodes }}"
-
-- name: Build device mapping for selected nodes/slot
-  ansible.builtin.set_fact:
-    _node_devmap: >-
-      {{
-        dict(_nvme_nodes | map('community.general.dict_kv', 'key', 'value') | list)
-        | combine( dict(_nvme_nodes | list | map('extract', nvme_layout) | list) )
-      }}
-  vars:
-    # community.general.dict_kv isn’t strictly needed; we keep logic simple below.
-    dummy: null
-
-- name: Produce concrete device list (boot_dev, root_dev)
-  ansible.builtin.set_fact:
-    nvme_selected:
-      "{{ (nvme_selected | default([])) + [
-            {
-              'node': item,
-              'boot_part': nvme_layout[item][_slot].boot,
-              'root_part': nvme_layout[item][_slot].root,
-              'boot_dev': nvme_device ~ 'p' ~ nvme_layout[item][_slot].boot,
-              'root_dev': nvme_device ~ 'p' ~ nvme_layout[item][_slot].root,
-              'boot_mnt': tftp_base ~ '/' ~ item,
-              'root_mnt': nfs_base ~ '/' ~ item
-            }
-          ] }}"
-  loop: "{{ _nvme_nodes }}"
-
-- name: Show planned mounts (debug)
+- name: Debug part_list map
   ansible.builtin.debug:
-    var: nvme_selected
+    var: part_list
+  when: debug | default(false)
