@@ -17,5 +17,21 @@ nvme_map:                     # mapping of logical nodes to physical NVMe device
     a: { boot: 13, root: 14 }
     b: { boot: 15, root: 16 }
 
+boot_map:
+  node0:
+    boot_mode: nvme_prio
+  node1:
+    boot_mode: net_prio
+  node2:
+    boot_mode: net_prio
+  node3:
+    boot_mode: net_prio
+
+hostname_map:
+  node0: rpi-node0
+  node1: rpi-node1
+  node2: rpi-node2
+  node3: rpi-node3
+  
 helm_namespace: monitoring    # default namespace for Helm and Kubernetes operations
 helm_release: monitor-stack   # default Helm release name for Prometheus and Grafana

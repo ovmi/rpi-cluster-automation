@@ -1,0 +1,5 @@
+- name: Check parameters
+  ansible.builtin.import_tasks: check_params.yml
+
+- name: Configure EEPROM
+  ansible.builtin.import_tasks: eeprom_config.yml

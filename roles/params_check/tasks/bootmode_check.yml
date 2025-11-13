@@ -1,19 +1,23 @@
 ---
-- name: Set default boot sequence
+- name: Normalize boot_mode parameter
   ansible.builtin.set_fact:
-    boot_seq: "{{ boot_seq | default('nvme_prio') }}"
+    boot_mode_param: "{{ boot_mode_param | lower }}"
 
-- name: Validate boot sequence
+- name: Validate boot_mode_param value
   ansible.builtin.assert:
     that:
-      - boot_seq in boot_seq_map.keys()
-    fail_msg: "Invalid boot_seq={{ boot_seq }}. Must be one of: {{ boot_seq_map.keys() | join(', ') }}"
+      - boot_mode_param in boot_sequences.keys()
+    fail_msg: "Invalid boot_mode '{{ boot_mode_param }}'. Valid options are: {{ boot_sequences.keys() | list | join(', ') }}."
+    success_msg: "Boot mode parameter '{{ boot_mode_param }}' is valid."
 
-- name: Derive effective BOOT_ORDER from boot_seq
+- name: Resolve boot sequence from mode
   ansible.builtin.set_fact:
-    effective_boot_order: "{{ boot_seq_map[boot_seq] }}"
+    boot_seq: "{{ boot_sequences[boot_mode_param] }}"
 
-- name: Show boot mode selection
+- name: Build BOOT_ORDER from sequence
+  ansible.builtin.set_fact:
+    boot_order: "0x{{ boot_seq | map('extract', boot_modes) | join('') }}"
+
+- name: Show BOOT_ORDER setting
   ansible.builtin.debug:
-    msg: "Boot sequence '{{ boot_seq }}' → BOOT_ORDER={{ effective_boot_order }}"
-  when: debug | default(false)
+    msg: "Setting BOOT_ORDER to {{ boot_order }} for boot mode {{ boot_mode_param }}"

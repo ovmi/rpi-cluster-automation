@@ -13,7 +13,14 @@ boot_sequences:
   nvme_prio: ["restart", "usb", "sd", "nvme"]
   sdcard_prio: ["restart", "usb", "nvme", "sd"]
   net_prio: ["restart", "usb", "sd", "net"]
+  auto: ["restart", "usb", "sd"]
 
   # Control behavior
 bootmode_reboot: true      # reboot if EEPROM changed
 bootmode_verify_root: true # verify root device after reboot
+
+# boot_mode: nvme_prio                # Options: nvme_prio, sdcard_prio, net_prio
+# boot_mode_expected: '^/dev/nvme'    # Options: nvme_prio: '^/dev/nvme'
+#                                     #          sdcard_prio: '^/dev/mmcblk'
+#                                     #          usb_prio: '^/dev/sd[a-z]'
+#                                     #          net_prio: '^(nfs:|nbd:|overlay:)'
