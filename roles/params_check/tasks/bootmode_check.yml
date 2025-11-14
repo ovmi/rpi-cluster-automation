@@ -21,3 +21,4 @@
 - name: Show BOOT_ORDER setting
   ansible.builtin.debug:
     msg: "Setting BOOT_ORDER to {{ boot_order }} for boot mode {{ boot_mode_param }}"
+  when: debug | default(false)

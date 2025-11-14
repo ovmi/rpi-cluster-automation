@@ -1,29 +1,72 @@
-# The new OS is expected to boot now.
-- name: Verify EEPROM BOOT_ORDER (use vcgencmd on legacy)
+- name: Reboot nodes with EEPROM updates pending
+  ansible.builtin.shell: sleep 2 && reboot
+  async: 1
+  poll: 0
+  delegate_to: "{{ hostname_map[node] }}"
+  loop: "{{ reboot_nodes_list }}"
+  loop_control:
+    loop_var: node
   become: true
-  ansible.builtin.command: vcgencmd bootloader_config
-  register: bootcfg
-  changed_when: false
 
-- name: Assert BOOT_ORDER matches desired
+- name: Wait for nodes to come up
+  ansible.builtin.wait_for_connection:
+    delay: 10
+    timeout: 300
+  delegate_to: "{{ hostname_map[node] }}"
+  loop: "{{ reboot_nodes_list }}"
+  loop_control:
+    loop_var: node
+
+- name: Apply SSH configuration after reboot
+  ansible.builtin.include_role:
+    name: ssh_config
+  vars:
+    ssh_config_target_nodes: "{{ reboot_nodes_list }}"
+  when: reboot_nodes_list | default([]) | length > 0
+
+- name: Read EEPROM after reboot
+  ansible.builtin.command: rpi-eeprom-config
+  delegate_to: "{{ hostname_map[node] }}"
+  register: eeprom_verify
+  changed_when: false
+  loop: "{{ reboot_nodes_list }}"
+  loop_control:
+    loop_var: node
+  become: true
+
+- name: Validate BOOT_ORDER after reboot
   ansible.builtin.assert:
     that:
-      - "'BOOT_ORDER=' ~ boot_order in bootcfg.stdout"
-    fail_msg: "EEPROM BOOT_ORDER mismatch:\n{{ bootcfg.stdout }}"
-    success_msg: "EEPROM BOOT_ORDER is {{ boot_order }}"
+      - "'BOOT_ORDER={{ boot_order }}' in eeprom_verify.results[reboot_node].stdout"
+    fail_msg: "EEPROM not updated after reboot on node {{ reboot_nodes_list[reboot_node] }}"
+    success_msg: "EEPROM updated successfully on node {{ reboot_nodes_list[reboot_node] }}"
+  loop: "{{ reboot_nodes_list }}"
+  loop_control:
+    index_var: reboot_node
+    label: "{{ reboot_nodes_list[reboot_node] }}"
+  when: eeprom_verify.results is defined
 
-- name: Verify root device is NVMe (optional)
-  when: bootmode_verify_root
-  block:
-    - name: Find current root device
-      become: true
-      ansible.builtin.command: findmnt -no SOURCE /
-      register: root_src
-      changed_when: false
+# - name: Read back EEPROM after update
+#   ansible.builtin.command: rpi-eeprom-config
+#   delegate_to: "{{ hostname_map[node] }}"
+#   register: eeprom_readback
+#   changed_when: false
+#   become: true
 
-    - name: Assert root device matches expectation
-      ansible.builtin.assert:
-        that:
-          - root_src.stdout is match(boot_mode_expected)
-        fail_msg: "Root FS not as expected ({{ boot_mode_expected }}): {{ root_src.stdout }}"
-        success_msg: "Root FS OK: {{ root_src.stdout }}"
+# - name: Verify EEPROM parameters
+#   ansible.builtin.assert:
+#     that:
+#       - (eeprom_readback.stdout_lines | select('match', '^BOOT_ORDER=') | first | default('')) == "BOOT_ORDER={{ boot_order }}"
+#     fail_msg: "BOOT_ORDER mismatch on {{ hostname_map[node] }}"
+#   delegate_to: "{{ hostname_map[node] }}"
+
+# - name: Verify net_prio parameters
+#   when: boot_mode_effective == 'net_prio'
+#   ansible.builtin.assert:
+#     that:
+#       - "'TFTP_SERVER={{ rpi_node0 }}' in eeprom_readback.stdout"
+#       - "'TFTP_PREFIX={{ node }}-boot' in eeprom_readback.stdout"
+#       - "'NET_INSTALL_AT_POWER_ON=1' in eeprom_readback.stdout"
+#     fail_msg: "Missing NET boot parameters on {{ hostname_map[node] }}"
+#     success_msg: "Network boot EEPROM parameters OK on {{ hostname_map[node] }}"
+#   delegate_to: "{{ hostname_map[node] }}"

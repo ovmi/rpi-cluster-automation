@@ -1,0 +1,88 @@
+- name: Resolve boot mode
+  ansible.builtin.set_fact:
+    boot_mode_effective: >-
+      {{
+        boot_mode_param
+        if boot_mode_param != 'auto'
+        else boot_mode_map[node].boot_mode
+      }}
+
+- name: Export existing EEPROM config
+  ansible.builtin.command: rpi-eeprom-config --out /tmp/bootconf.txt
+  delegate_to: "{{ hostname_map[node] }}"
+  changed_when: false
+  become: true
+
+- name: Update BOOT_ORDER for selected boot mode
+  ansible.builtin.lineinfile:
+    path: /tmp/bootconf.txt
+    regexp: '^BOOT_ORDER='
+    line: "BOOT_ORDER={{ boot_order }}"
+  delegate_to: "{{ hostname_map[node] }}"
+  become: true
+
+- name: Update EEPROM parameters for selected boot mode
+  ansible.builtin.lineinfile:
+    path: /tmp/bootconf.txt
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+  delegate_to: "{{ hostname_map[node] }}"
+  loop: "{{ boot_params[boot_mode_effective] | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: boot_params[boot_mode_effective] | length > 0
+  become: true
+
+# - name: Build new EEPROM image
+#   ansible.builtin.command: >
+#     rpi-eeprom-config
+#     --config /tmp/bootconf.txt
+#     --out /tmp/eeprom-update.bin
+#   delegate_to: "{{ hostname_map[node] }}"
+#   changed_when: true
+#   become: true
+
+# - name: Apply EEPROM update
+#   ansible.builtin.command: >
+#     rpi-eeprom-update -d -f /tmp/eeprom-update.bin
+#   delegate_to: "{{ hostname_map[node] }}"
+#   register: eeprom_apply
+#   changed_when: "'UPDATE SUCCESSFUL' in (eeprom_apply.stdout | default(''))"
+#   failed_when: eeprom_apply.rc != 0
+#   become: true
+
+- name: Apply EEPROM update
+  ansible.builtin.command: >
+    rpi-eeprom-config --apply /tmp/bootconf.txt
+  delegate_to: "{{ hostname_map[node] }}"
+  register: eeprom_apply
+  changed_when: "'UPDATE SUCCESSFUL' in (eeprom_apply.stdout | default(''))"
+  failed_when: eeprom_apply.rc != 0
+  become: true
+
+- name: Debug EEPROM apply result
+  ansible.builtin.debug:
+    msg: |
+      Node: {{ node }}
+      RC: {{ eeprom_apply.rc }}
+      STDOUT:
+      {{ eeprom_apply.stdout | default('<empty>') }}
+      STDERR:
+      {{ eeprom_apply.stderr | default('<empty>') }}
+  when: debug | default(false)
+
+- name: Track nodes requiring reboot
+  delegate_to: local
+  ansible.builtin.set_fact:
+    reboot_nodes_list: >-
+      {{ reboot_nodes_list | default([]) + [reboot_node]
+      if ('UPDATE SUCCESSFUL' in (eeprom_apply.stdout | default('')))
+      else reboot_nodes_list | default([]) }}
+  loop: "{{ nodes_list }}"
+  loop_control:
+    loop_var: reboot_node
+
+- name: Show reboot nodes list after evaluating all nodes
+  ansible.builtin.debug:
+    msg: "Reboot nodes list: {{ reboot_nodes_list | default([]) }}"
+  when: debug | default(false)

@@ -1,5 +1,8 @@
 - name: Check parameters
   ansible.builtin.import_tasks: check_params.yml
 
-- name: Configure EEPROM
+- name: EEPROM boot mode configuration
   ansible.builtin.import_tasks: eeprom_config.yml
+
+- name: EEPROM update post-reboot tasks
+  ansible.builtin.import_tasks: post_reboot.yml

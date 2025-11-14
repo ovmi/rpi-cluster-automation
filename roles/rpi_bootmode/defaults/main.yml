@@ -15,6 +15,16 @@ boot_sequences:
   net_prio: ["restart", "usb", "sd", "net"]
   auto: ["restart", "usb", "sd"]
 
+boot_params:
+  nvme_prio: {}
+  sdcard_prio: {}
+  net_prio:
+    TFTP_SERVER: "{{ tftp_server }}"
+    TFTP_PREFIX: "{{ node }}"
+    NET_INSTALL_AT_POWER_ON: "1"
+  auto: {}
+
+
   # Control behavior
 bootmode_reboot: true      # reboot if EEPROM changed
 bootmode_verify_root: true # verify root device after reboot

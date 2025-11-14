@@ -11,42 +11,7 @@
   roles:
     - rpi_bootmode
 
-# - name: Controller refresh trust and distribute keys
-#   hosts: local
-#   gather_facts: false
-#   tasks:
-#     - name: Controller-side SSH prep & key distribution
-#       ansible.builtin.import_role:
-#         name: ssh_config
-#         tasks_from: controller_keys.yml
-
-# - name: Post-reboot configuration on nodes
-#   hosts: cluster
-#   become: true
-#   gather_facts: false
-#   serial: 1
-#   vars:
-#     boot_mode: nvme_prio
-#     boot_mode_expected: '^/dev/nvme'
-#   tasks:
-#     - name: Wait for SSH to be available
-#       ansible.builtin.wait_for_connection:
-#         connect_timeout: 10
-#         sleep: 2
-#         delay: 1
-#         timeout: 120
-
-#     - name: Configure sshd & passwordless SSH on node
-#       ansible.builtin.import_role:
-#         name: ssh_config
-#         tasks_from: nodes_sshd.yml
-
-#     - name: Post-reboot tasks (verify root device, etc.)
-#       ansible.builtin.import_role:
-#         name: rpi_bootmode
-#         tasks_from: post_reboot.yml
-
-  # Configure Raspberry Pi boot mode options (e.g., USB boot, network boot).
-  # Example command line to run this playbook (set slot A and check expected device):
-  # ansible-playbook playbooks/rpi_bootmode.yml -e nodes=node0 -e boot_mode=nvme_prio
-  # ansible-playbook playbooks/rpi_bootmode.yml -e nodes=node1,node2 -e boot_mode=net_prio
+# Configure Raspberry Pi boot mode options (e.g., USB boot, network boot).
+# Example command line to run this playbook (set slot A and check expected device):
+# ansible-playbook playbooks/rpi_bootmode.yml -e nodes=node0 -e boot_mode=nvme_prio -e debug=true
+# ansible-playbook playbooks/rpi_bootmode.yml -e nodes=node1,node2 -e boot_mode=net_prio
